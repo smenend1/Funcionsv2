@@ -3,173 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MathEngine Pro - Inspirat en Mathcraft</title>
+    <title>MathEngine Pro V2</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <style>
-        :root { --p: #6366f1; --s: #1e293b; --bg: #f8fafc; --acc: #f43f5e; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--s); margin: 0; padding: 20px; }
-        .app-grid { display: grid; grid-template-columns: 400px 1fr; gap: 20px; max-width: 1400px; margin: 0 auto; }
-        @media (max-width: 1000px) { .app-grid { grid-template-columns: 1fr; } }
+        :root { --p: #6366f1; --s: #1e293b; --bg: #f1f5f9; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
+        .app-container { display: grid; grid-template-columns: 380px 1fr; gap: 20px; flex: 1; min-height: 0; }
+        .card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar { padding: 20px; overflow-y: auto; }
+        .chart-area { padding: 10px; position: relative; }
         
-        /* Panell de Control */
-        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        .step { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f1f5f9; }
-        h3 { font-size: 0.9rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+        h2 { color: var(--p); margin: 0 0 15px 0; font-size: 1.4rem; }
+        label { font-size: 0.8rem; font-weight: 700; color: #64748b; display: block; margin-top: 10px; }
+        select, input { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; margin-top: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 14px; background: var(--p); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         
-        select, input { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 1rem; margin-top: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: var(--p); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-        button:hover { background: #4f46e5; transform: translateY(-2px); }
-
-        /* Resultats Estil App Premium */
-        .res-card { background: var(--s); color: white; padding: 20px; border-radius: 15px; margin-top: 20px; }
-        .formula { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; color: #818cf8; text-align: center; margin: 15px 0; }
-        .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .stat { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; }
-        .stat b { display: block; font-size: 0.7rem; color: #94a3b8; }
-        
-        .chart-container { height: 100%; min-height: 500px; }
+        .results { background: var(--s); color: white; padding: 15px; border-radius: 12px; margin-top: 15px; font-size: 0.85rem; }
+        .res-line { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid #334155; padding-bottom: 3px; }
+        .res-line b { color: #818cf8; }
     </style>
 </head>
 <body>
 
-<div class="app-grid">
-    <aside class="sidebar">
-        <div class="card">
-            <h2 style="margin-top:0; color: var(--p);">MathEngine Pro</h2>
-            
-            <div class="step">
-                <h3>1. Quin tipus de problema és?</h3>
-                <select id="m-type" onchange="ui()">
-                    <option value="lin">Lineal (Cost fix + Variable)</option>
-                    <option value="quad">Quadràtica (Moviment / Àrees)</option>
-                    <option value="inv">Inversa (Repartiment / Temps)</option>
-                    <option value="txt">Escriure fórmula directament</option>
-                </select>
+<div class="app-container">
+    <aside class="card sidebar">
+        <h2>MathEngine Pro</h2>
+        
+        <label>Tipus d'exercici:</label>
+        <select id="type" onchange="toggleInputs()">
+            <option value="lineal">Lineal (Fitxa 1 i 2)</option>
+            <option value="quad">Quadràtica (Fitxa 3)</option>
+            <option value="manual">Escriure fórmula (y = ...)</option>
+        </select>
+
+        <div id="dynamic-inputs">
             </div>
 
-            <div id="inputs" class="step">
-                </div>
+        <button onclick="update()">CALCULAR I DIBUIXAR</button>
 
-            <button onclick="resoldre()">ANALITZAR ARA</button>
-
-            <div id="resultats" class="res-card" style="display:none">
-                <h3>Solució Analítica</h3>
-                <div id="out-eq" class="formula"></div>
-                <div class="analysis-grid">
-                    <div class="stat"><b>Domini (X)</b><span id="out-dom"></span></div>
-                    <div class="stat"><b>Imatge (Y)</b><span id="out-im"></span></div>
-                    <div class="stat"><b>Tall Eix Y</b><span id="out-ty"></span></div>
-                    <div class="stat"><b>Tall Eix X</b><span id="out-tx"></span></div>
-                </div>
-            </div>
+        <div id="results-box" class="results" style="display:none">
+            <div class="res-line"><span>Equació:</span> <b id="r-eq"></b></div>
+            <div class="res-line"><span>Domini:</span> <b id="r-dom"></b></div>
+            <div class="res-line"><span>Imatge:</span> <b id="r-im"></b></div>
+            <div class="res-line"><span>Tall Y:</span> <b id="r-ty"></b></div>
+            <div class="res-line"><span>Tall X:</span> <b id="r-tx"></b></div>
         </div>
     </aside>
 
-    <main class="card chart-container">
-        <canvas id="mainChart"></canvas>
+    <main class="card chart-area">
+        <canvas id="canvas"></canvas>
     </main>
 </div>
 
 <script>
     let chart = null;
 
-    function ui() {
-        const t = document.getElementById('m-type').value;
-        const box = document.getElementById('inputs');
-        if(t === 'lin') {
-            box.innerHTML = `
-                <label>Valor Inicial (n):</label><input type="number" id="v1" value="2.05">
-                <label>Creixement/unitat (m):</label><input type="number" id="v2" value="0.93">
+    function toggleInputs() {
+        const t = document.getElementById('type').value;
+        const div = document.getElementById('dynamic-inputs');
+        if (t === 'lineal') {
+            div.innerHTML = `
+                <label>Baixada bandera / Fix (n):</label><input type="number" id="v1" value="2.05">
+                <label>Preu per unitat (m):</label><input type="number" id="v2" value="0.93">
             `;
-        } else if(t === 'quad') {
-            box.innerHTML = `
+        } else if (t === 'quad') {
+            div.innerHTML = `
                 <label>Coeficient a (x²):</label><input type="number" id="v1" value="1">
                 <label>Coeficient b (x):</label><input type="number" id="v2" value="-4">
-                <label>Terme c:</label><input type="number" id="v3" value="0">
+                <label>Terme c (fix):</label><input type="number" id="v3" value="3">
             `;
-        } else if(t === 'inv') {
-            box.innerHTML = `<label>Constant K (k/x):</label><input type="number" id="v1" value="100">`;
         } else {
-            box.innerHTML = `<label>Funció f(x):</label><input type="text" id="v1" value="x^2 - 4">`;
+            div.innerHTML = `<label>Escriu la funció:</label><input type="text" id="v1" value="x^2 - 4">`;
         }
     }
 
-    function resoldre() {
-        const type = document.getElementById('m-type').value;
+    function update() {
+        const t = document.getElementById('type').value;
         let expr = "";
-        
-        if(type === 'lin') expr = `${document.getElementById('v2').value} * x + ${document.getElementById('v1').value}`;
-        else if(type === 'quad') expr = `${document.getElementById('v1').value}*x^2 + ${document.getElementById('v2').value}*x + ${document.getElementById('v3').value}`;
-        else if(type === 'inv') expr = `${document.getElementById('v1').value} / x`;
+        if(t === 'lineal') expr = `${document.getElementById('v2').value}*x + ${document.getElementById('v1').value}`;
+        else if(t === 'quad') expr = `${document.getElementById('v1').value}*x^2 + ${document.getElementById('v2').value}*x + ${document.getElementById('v3').value}`;
         else expr = document.getElementById('v1').value;
 
-        processar(expr);
-    }
-
-    function processar(expr) {
-        try {
-            const node = math.parse(expr);
-            const f = node.compile();
-            const labels = [], data = [], colors = [], radius = [];
-            
-            // Interval automàtic lògic
-            let xMin = -10, xMax = 10;
-            if(expr.includes('/') || expr.includes('x^2')) { xMin = -10; xMax = 10; } 
-            else { xMin = 0; xMax = 20; }
-
-            const pas = (xMax - xMin) / 50;
-            for(let x = xMin; x <= xMax; x = math.round(x + pas, 10)) {
-                let y = f.evaluate({x: x});
-                if(isFinite(y)) {
-                    labels.push(x.toFixed(1));
-                    data.push(y);
-                    // Punts de Tall (Fitxa 3)
-                    if(Math.abs(y) < 0.5 || Math.abs(x) < 0.1) { colors.push('#f43f5e'); radius.push(6); }
-                    else { colors.push('#6366f1'); radius.push(0); }
-                } else {
-                    labels.push(x); data.push(null); colors.push(null); radius.push(0);
-                }
+        const node = math.parse(expr);
+        const f = node.compile();
+        
+        const labels = [], data = [], colors = [], radius = [];
+        // Límits del gràfic (Això soluciona el problema del Zoom)
+        const range = 10; 
+        
+        for (let x = -range; x <= range; x += 0.5) {
+            let y = f.evaluate({x: x});
+            labels.push(x);
+            data.push(y);
+            // Marcar punts de tall
+            if (Math.abs(y) < 0.3 || Math.abs(x) < 0.1) {
+                colors.push('#f43f5e'); radius.push(6);
+            } else {
+                colors.push('#6366f1'); radius.push(0);
             }
+        }
 
-            // UI
-            document.getElementById('resultats').style.display = 'block';
-            document.getElementById('out-eq').innerText = "y = " + node.toString();
-            document.getElementById('out-dom').innerText = `[${xMin}, ${xMax}]`;
-            document.getElementById('out-im').innerText = `[${Math.min(...data.filter(v=>v!=null)).toFixed(1)}, ${Math.max(...data.filter(v=>v!=null)).toFixed(1)}]`;
-            
-            const ty = f.evaluate({x:0});
-            document.getElementById('out-ty').innerText = isFinite(ty) ? `(0, ${ty})` : "No existeix";
-            document.getElementById('out-tx').innerText = "Veure punts vermells";
-
-            dibuixar(labels, data, colors, radius);
-        } catch(e) { alert("Error en l'expressió matemàtica"); }
+        // Mostrar dades d'anàlisi
+        document.getElementById('results-box').style.display = 'block';
+        document.getElementById('r-eq').innerText = "y = " + node.toString();
+        document.getElementById('r-dom').innerText = "R (Tots els reals)";
+        const yFiltered = data.filter(v => isFinite(v));
+        document.getElementById('r-im').innerText = `[${Math.min(...yFiltered).toFixed(1)}, ${Math.max(...yFiltered).toFixed(1)}]`;
+        document.getElementById('r-ty').innerText = `(0, ${f.evaluate({x:0}).toFixed(2)})`;
+        
+        draw(labels, data, colors, radius, range);
     }
 
-    function dibuixar(l, d, c, r) {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        if(chart) chart.destroy();
+    function draw(l, d, c, r, range) {
+        const ctx = document.getElementById('canvas').getContext('2d');
+        if (chart) chart.destroy();
         chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: l,
                 datasets: [{
-                    data: d, borderColor: '#6366f1', borderWidth: 4,
-                    pointBackgroundColor: c, pointRadius: r, tension: 0.3, fill: false
+                    data: d, borderColor: '#6366f1', borderWidth: 3,
+                    pointBackgroundColor: c, pointRadius: r, tension: 0.2, fill: false
                 }]
             },
             options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { 
-                    x: { grid: { display: false } },
-                    y: { grid: { color: '#f1f5f9' } }
-                }
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'linear', position: 'center',
+                        min: -range, max: range,
+                        grid: { color: '#e2e8f0' },
+                        ticks: { stepSize: 1 }
+                    },
+                    y: {
+                        type: 'linear', position: 'center',
+                        min: -range, max: range, // Aquí fixem el zoom
+                        grid: { color: '#e2e8f0' },
+                        ticks: { stepSize: 1 }
+                    }
+                },
+                plugins: { legend: { display: false } }
             }
         });
     }
 
-    window.onload = () => { ui(); resoldre(); };
+    window.onload = () => { toggleInputs(); update(); };
 </script>
 </body>
 </html>
