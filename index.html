@@ -3,110 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MathEngine Pro - App de Funcions</title>
+    <title>MathEngine Pro - Talls i Anàlisi</title>
     
     <link rel="manifest" href="manifest.json">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0070f3">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2344/2344132.png">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     
     <style>
-        :root { --p: #0070f3; --bg: #ffffff; --grid: #eaeaea; --text: #171717; }
-        body { 
-            font-family: -apple-system, system-ui, sans-serif; 
-            background: var(--bg); 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
-            color: var(--text);
-        }
-        
-        header { 
-            padding: 15px 20px; 
-            border-bottom: 1px solid var(--grid); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-        }
+        :root { --p: #0070f3; --bg: #ffffff; --grid: #eaeaea; --text: #171717; --accent: #f43f5e; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; color: var(--text); }
+        header { padding: 15px 20px; border-bottom: 1px solid var(--grid); display: flex; justify-content: space-between; align-items: center; }
         .logo { font-weight: 800; font-size: 1.1rem; color: var(--p); }
-
         .main-content { display: grid; grid-template-columns: 350px 1fr; flex: 1; overflow: hidden; }
         @media (max-width: 900px) { .main-content { grid-template-columns: 1fr; overflow: auto; } }
-
         .controls { padding: 20px; border-right: 1px solid var(--grid); overflow-y: auto; background: #fafafa; }
-        .chart-container { position: relative; background: white; flex: 1; display: flex; flex-direction: column; }
-        
         .input-group { margin-bottom: 15px; }
         label { display: block; font-size: 0.75rem; font-weight: 700; color: #666; margin-bottom: 5px; text-transform: uppercase; }
-        select, input { 
-            width: 100%; padding: 12px; border: 1px solid var(--grid); 
-            border-radius: 8px; font-size: 1rem; box-sizing: border-box; outline: none; 
-        }
-        select:focus, input:focus { border-color: var(--p); }
-
-        .btn { 
-            width: 100%; padding: 15px; background: var(--p); color: white; 
-            border: none; border-radius: 8px; font-weight: 600; cursor: pointer; 
-            font-size: 1rem; margin-top: 10px;
-        }
-        
-        .analysis-card { 
-            background: white; border: 1px solid var(--grid); 
-            border-radius: 12px; padding: 15px; margin-top: 20px;
-        }
-        .analysis-card h4 { margin: 0 0 8px 0; font-size: 0.7rem; color: #888; text-transform: uppercase; }
-        .analysis-card p { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.4; }
-
+        select, input { width: 100%; padding: 12px; border: 1px solid var(--grid); border-radius: 8px; font-size: 1rem; box-sizing: border-box; outline: none; }
+        .btn { width: 100%; padding: 15px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .analysis-card { background: white; border: 1px solid var(--grid); border-radius: 12px; padding: 15px; margin-top: 15px; }
+        .analysis-card h4 { margin: 0 0 8px 0; font-size: 0.7rem; color: var(--p); text-transform: uppercase; }
+        .analysis-card p { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.4; }
+        .cut-point { color: var(--accent); font-weight: bold; }
         #canvas-wrapper { flex: 1; position: relative; padding: 20px; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">MATHENGINE // PRO</div>
-    <div style="font-size: 0.7rem; font-weight: bold; background: #eee; padding: 4px 8px; border-radius: 4px;">PWA READY</div>
+    <div class="logo">MATHENGINE // ANALYZER</div>
 </header>
 
 <div class="main-content">
     <div class="controls">
         <div class="input-group">
-            <label>Tipus de Problema</label>
+            <label>Tipus de Funció</label>
             <select id="model" onchange="updateInputs()">
-                <option value="lineal">Lineal (Taxi, Preus, Molles)</option>
-                <option value="quad">Quadràtica (Paràboles)</option>
-                <option value="manual">Expressió Lliure (f(x))</option>
+                <option value="lineal">Lineal (y = mx + n)</option>
+                <option value="quad">Quadràtica (y = ax² + bx + c)</option>
+                <option value="manual">Expressió lliure</option>
             </select>
         </div>
 
         <div id="dynamic-fields"></div>
-
-        <button class="btn" onclick="process()">ANALITZAR FUNCIO</button>
+        <button class="btn" onclick="process()">CALCULAR TOTS ELS TALLS</button>
 
         <div class="analysis">
             <div class="analysis-card">
-                <h4>Equació Resultant</h4>
-                <p id="res-eq">y = ...</p>
+                <h4>Equació</h4>
+                <p id="res-eq">-</p>
             </div>
             <div class="analysis-card">
-                <h4>Característiques (Fitxa 3)</h4>
-                <p id="res-dom-im">Domini i Imatge...</p>
+                <h4>Tall Eix Y (Ordenada a l'origen)</h4>
+                <p id="res-ty" class="cut-point">-</p>
             </div>
             <div class="analysis-card">
-                <h4>Punts Crucials</h4>
-                <p id="res-talls">Talls amb els eixos...</p>
+                <h4>Talls Eix X (Abscisses / Arrels)</h4>
+                <p id="res-tx" class="cut-point">-</p>
+            </div>
+            <div class="analysis-card">
+                <h4>Domini i Recorregut</h4>
+                <p id="res-dom-im">-</p>
             </div>
         </div>
     </div>
 
-    <div class="chart-container">
-        <div id="canvas-wrapper">
-            <canvas id="mainChart"></canvas>
-        </div>
+    <div id="canvas-wrapper">
+        <canvas id="mainChart"></canvas>
     </div>
 </div>
 
@@ -118,96 +83,101 @@
         const fields = document.getElementById('dynamic-fields');
         if (m === 'lineal') {
             fields.innerHTML = `
-                <div class="input-group"><label>Pendent (m) / Preu km</label><input type="number" id="valM" value="0.93"></div>
-                <div class="input-group"><label>Cost Fix (n) / Baixada</label><input type="number" id="valN" value="2.05"></div>
+                <div class="input-group"><label>m (pendent)</label><input type="number" id="valM" value="2"></div>
+                <div class="input-group"><label>n (tall Y)</label><input type="number" id="valN" value="-4"></div>
             `;
         } else if (m === 'quad') {
             fields.innerHTML = `
                 <div class="input-group"><label>a (x²)</label><input type="number" id="valA" value="1"></div>
-                <div class="input-group"><label>b (x)</label><input type="number" id="valB" value="-4"></div>
-                <div class="input-group"><label>c (terme independent)</label><input type="number" id="valC" value="3"></div>
+                <div class="input-group"><label>b (x)</label><input type="number" id="valB" value="-2"></div>
+                <div class="input-group"><label>c (fix)</label><input type="number" id="valC" value="-3"></div>
             `;
         } else {
-            fields.innerHTML = `<div class="input-group"><label>Escriu f(x)</label><input type="text" id="valFree" value="x^2 - 4"></div>`;
+            fields.innerHTML = `<div class="input-group"><label>f(x)</label><input type="text" id="valFree" value="x^2 - 9"></div>`;
         }
     }
 
     function process() {
         const model = document.getElementById('model').value;
         let expr = "";
+        let tallsX = [];
         
         try {
-            if (model === 'lineal') expr = `${document.getElementById('valM').value}*x + ${document.getElementById('valN').value}`;
-            else if (model === 'quad') expr = `${document.getElementById('valA').value}*x^2 + ${document.getElementById('valB').value}*x + ${document.getElementById('valC').value}`;
-            else expr = document.getElementById('valFree').value;
+            if (model === 'lineal') {
+                const m = parseFloat(document.getElementById('valM').value);
+                const n = parseFloat(document.getElementById('valN').value);
+                expr = `${m}*x + ${n}`;
+                if (m !== 0) tallsX.push(-n / m);
+            } else if (model === 'quad') {
+                const a = parseFloat(document.getElementById('valA').value);
+                const b = parseFloat(document.getElementById('valB').value);
+                const c = parseFloat(document.getElementById('valC').value);
+                expr = `${a}*x^2 + ${b}*x + ${c}`;
+                // Fórmula de l'equació de segon grau
+                const discriminant = b*b - 4*a*c;
+                if (discriminant >= 0) {
+                    tallsX.push((-b + Math.sqrt(discriminant)) / (2*a));
+                    if (discriminant > 0) tallsX.push((-b - Math.sqrt(discriminant)) / (2*a));
+                }
+            } else {
+                expr = document.getElementById('valFree').value;
+                // Intentar buscar talls per aproximació en mode manual
+                for(let i=-10; i<=10; i+=0.01) {
+                    if (Math.abs(math.evaluate(expr, {x: i})) < 0.05) {
+                        if (tallsX.length === 0 || Math.abs(tallsX[tallsX.length-1] - i) > 0.5) tallsX.push(i);
+                    }
+                }
+            }
 
             const node = math.parse(expr);
             const f = node.compile();
-            
             const labels = [], data = [], colors = [], radius = [];
-            const limit = 12; // ESCALA FIXA: evita el zoom que deforma la gràfica
+            const limit = 10;
 
             for (let x = -limit; x <= limit; x += 0.2) {
                 let y = f.evaluate({x: x});
                 labels.push(x.toFixed(1));
                 data.push(y);
                 
-                // Marcar punts de tall (Fitxa 3)
-                if (Math.abs(y) < 0.25 || Math.abs(x) < 0.1) {
-                    colors.push('#0070f3'); radius.push(5);
+                // Pintem els talls X trobats al gràfic
+                let isTall = tallsX.some(tx => Math.abs(tx - x) < 0.15);
+                let isTallY = Math.abs(x) < 0.1;
+
+                if (isTall || isTallY) {
+                    colors.push('#f43f5e'); radius.push(6);
                 } else {
                     colors.push('rgba(0,0,0,0)'); radius.push(0);
                 }
             }
 
-            // Actualitzar panell d'anàlisi
+            // Actualitzar interfície
             document.getElementById('res-eq').innerText = "f(x) = " + node.toString();
-            const yValid = data.filter(v => isFinite(v) && v !== null);
-            document.getElementById('res-dom-im').innerHTML = `Domini: ℝ (Tots els reals)<br>Imatge: [${Math.min(...yValid).toFixed(1)}, ${Math.max(...yValid).toFixed(1)}]`;
-            
-            const tallY = f.evaluate({x:0});
-            document.getElementById('res-talls').innerText = `Tall Eix Y: (0, ${tallY.toFixed(2)})`;
+            document.getElementById('res-ty').innerText = `(0, ${f.evaluate({x:0}).toFixed(2)})`;
+            document.getElementById('res-tx').innerText = tallsX.length > 0 
+                ? tallsX.map(tx => `(${tx.toFixed(2)}, 0)`).join(", ") 
+                : "No talla l'eix X";
+
+            const yV = data.filter(v => isFinite(v));
+            document.getElementById('res-dom-im').innerHTML = `Dom: ℝ <br> Img: [${Math.min(...yV).toFixed(1)}, ${Math.max(...yV).toFixed(1)}]`;
 
             renderChart(labels, data, colors, radius, limit);
-        } catch (e) {
-            alert("Error en la fórmula. Revisa els signes!");
-        }
+        } catch (e) { alert("Error matemàtic!"); }
     }
 
     function renderChart(l, d, c, r, limit) {
         const ctx = document.getElementById('mainChart').getContext('2d');
         if (myChart) myChart.destroy();
-        
         myChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: l,
-                datasets: [{
-                    data: d,
-                    borderColor: '#0070f3',
-                    borderWidth: 3,
-                    pointBackgroundColor: c,
-                    pointRadius: r,
-                    tension: 0.3,
-                    fill: false
-                }]
+                datasets: [{ data: d, borderColor: '#0070f3', borderWidth: 3, pointBackgroundColor: c, pointRadius: r, tension: 0.3, fill: false }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 scales: {
-                    x: {
-                        type: 'linear', position: 'center',
-                        min: -limit, max: limit,
-                        grid: { color: '#f0f0f0' },
-                        ticks: { stepSize: 1, font: { size: 9 } }
-                    },
-                    y: {
-                        type: 'linear', position: 'center',
-                        min: -limit, max: limit,
-                        grid: { color: '#f0f0f0' },
-                        ticks: { stepSize: 1, font: { size: 9 } }
-                    }
+                    x: { type: 'linear', position: 'center', min: -limit, max: limit, grid: { color: '#f0f0f0' } },
+                    y: { type: 'linear', position: 'center', min: -limit, max: limit, grid: { color: '#f0f0f0' } }
                 },
                 plugins: { legend: { display: false } }
             }
