@@ -3,189 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MathEngine Universal</title>
+    <title>MathEngine AI - Analitzador Universal</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <style>
-        :root {
-            --primary: #2563eb; --accent: #dc2626; --bg: #f8fafc;
-            --card: #ffffff; --text: #1e293b; --border: #cbd5e1;
-        }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
-        header { background: var(--primary); color: white; padding: 1rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .container { display: grid; grid-template-columns: 380px 1fr; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto; }
-        @media (max-width: 950px) { .container { grid-template-columns: 1fr; } }
-        .card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #e2e8f0; padding: 5px; border-radius: 8px; }
-        .tab { flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; background: none; font-weight: bold; color: #64748b; }
-        .tab.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        label { display: block; font-weight: 600; margin: 10px 0 5px; font-size: 0.9rem; }
-        input, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-size: 0.95rem; background: #fff; color: var(--text); }
-        button.main-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px; }
-        .results { margin-top: 20px; padding: 15px; background: #f1f5f9; border-radius: 8px; font-size: 0.9rem; border-left: 4px solid var(--primary); }
-        .chart-container { height: 500px; min-height: 300px; }
+        :root { --p: #2563eb; --s: #64748b; --bg: #f8fafc; --txt: #0f172a; --card: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--txt); margin: 0; }
+        header { background: var(--p); color: white; padding: 1rem; text-align: center; }
+        .container { display: grid; grid-template-columns: 400px 1fr; gap: 20px; padding: 20px; max-width: 1600px; margin: 0 auto; }
+        @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .tab-btn { padding: 10px; cursor: pointer; border: none; background: #e2e8f0; border-radius: 6px; font-weight: bold; flex: 1; }
+        .tab-btn.active { background: var(--p); color: white; }
+        label { display: block; margin: 15px 0 5px; font-weight: 600; font-size: 0.85rem; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        .btn-run { width: 100%; padding: 15px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .result-item { background: #f1f5f9; padding: 12px; border-radius: 8px; margin-top: 10px; border-left: 4px solid var(--p); }
+        .type-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; background: #dcfce7; color: #166534; font-size: 0.75rem; font-weight: bold; margin-bottom: 10px; }
+        .chart-wrap { height: 500px; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>MathEngine Universal</h1>
-</header>
+<header><h1>MathEngine AI Universal</h1></header>
 
 <div class="container">
     <aside>
         <div class="card">
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab('func')">Equació</button>
-                <button class="tab" onclick="switchTab('data')">Dades Lliures</button>
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button class="tab-btn active" onclick="setMode('direct')">Directe</button>
+                <button class="tab-btn" onclick="setMode('logic')">Enunciat</button>
             </div>
 
-            <div id="panel-func">
-                <label>Funció f(x):</label>
-                <input type="text" id="input-expr" value="x^2 - 4" placeholder="Ex: 2x + 3 o sin(x)">
-                <div style="display: flex; gap: 10px;">
-                    <div><label>Min X:</label><input type="number" id="min-x" value="-10"></div>
-                    <div><label>Max X:</label><input type="number" id="max-x" value="10"></div>
-                </div>
-            </div>
-
-            <div id="panel-data" style="display:none;">
-                <label>Punts (format: Etiqueta, Valor):</label>
-                <textarea id="input-data" rows="8" placeholder="Dilluns, 5&#10;Dimarts, 8&#10;Dimecres, 4"></textarea>
-                <label>Tipus de gràfic:</label>
-                <select id="chart-type" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border);">
-                    <option value="line">Línies</option>
-                    <option value="bar">Barres</option>
+            <div id="mode-direct">
+                <label>Tipus de funció:</label>
+                <select id="func-type" onchange="updatePlaceholder()">
+                    <option value="lineal">Lineal / Afí (y = mx + n)</option>
+                    <option value="quadratica">Quadràtica (y = ax² + bx + c)</option>
+                    <option value="proporcional">Proporcionalitat Inversa (y = k/x)</option>
+                    <option value="any">Qualsevol (Manual)</option>
                 </select>
+                <label>Escriu l'expressió:</label>
+                <input type="text" id="main-input" value="2x + 3">
             </div>
 
-            <button class="main-btn" onclick="processar()">Generar Gràfic</button>
+            <div id="mode-logic" style="display:none">
+                <label>Configura el problema:</label>
+                <input type="number" id="val-fix" placeholder="Cost fix / Valor inicial (n)">
+                <input type="number" id="val-var" placeholder="Cost variable / Pendent (m)">
+                <p style="font-size: 0.75rem; color: var(--s);">Exemple Taxi: Fix 2.05, Variable 0.93</p>
+            </div>
 
-            <div id="box-results" class="results" style="display:none">
-                <strong>Anàlisi de dades:</strong>
-                <div id="out-analysis"></div>
+            <div style="display:flex; gap:10px;">
+                <div><label>Min X:</label><input type="number" id="min-x" value="-10"></div>
+                <div><label>Max X:</label><input type="number" id="max-x" value="10"></div>
+            </div>
+
+            <button class="btn-run" onclick="processarTot()">ANALITZAR ARA</button>
+
+            <div id="results-area" style="display:none; margin-top:20px;">
+                <span id="label-tipus" class="type-badge">Lineal</span>
+                <div class="result-item"><strong>Equació:</strong> <span id="res-eq"></span></div>
+                <div class="result-item"><strong>Domini:</strong> <span id="res-dom"></span></div>
+                <div class="result-item"><strong>Imatge:</strong> <span id="res-im"></span></div>
+                <div class="result-item"><strong>Punts Tall:</strong> <span id="res-tall"></span></div>
             </div>
         </div>
     </aside>
 
     <main>
-        <div class="card chart-container">
-            <canvas id="mainChart"></canvas>
+        <div class="card chart-wrap">
+            <canvas id="canvas"></canvas>
         </div>
     </main>
 </div>
 
 <script>
-    let currentMode = 'func';
-    let myChart = null;
+    let mode = 'direct';
+    let chart = null;
 
-    function switchTab(mode) {
-        currentMode = mode;
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    function setMode(m) {
+        mode = m;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         event.target.classList.add('active');
-        document.getElementById('panel-func').style.display = mode === 'func' ? 'block' : 'none';
-        document.getElementById('panel-data').style.display = mode === 'data' ? 'block' : 'none';
+        document.getElementById('mode-direct').style.display = m === 'direct' ? 'block' : 'none';
+        document.getElementById('mode-logic').style.display = m === 'logic' ? 'block' : 'none';
     }
 
-    function processar() {
-        if (currentMode === 'func') renderFunció();
-        else renderDades();
+    function updatePlaceholder() {
+        const t = document.getElementById('func-type').value;
+        const input = document.getElementById('main-input');
+        if(t === 'lineal') input.value = "2x + 3";
+        if(t === 'quadratica') input.value = "x^2 - 4x + 3";
+        if(t === 'proporcional') input.value = "4 / x";
     }
 
-    function renderFunció() {
-        const expr = document.getElementById('input-expr').value;
-        const minX = parseFloat(document.getElementById('min-x').value);
-        const maxX = parseFloat(document.getElementById('max-x').value);
-        
-        // Càlcul de rang lògic (pas dinàmic)
-        const range = maxX - minX;
-        const step = range / 100; // Sempre 100 punts per a suavitat total
+    function detectarTipus(expr) {
+        if (expr.includes('/x')) return "Proporcionalitat Inversa (Asimptòtica)";
+        if (expr.includes('^2') || expr.includes('x*x')) return "Quadràtica (Paràbola)";
+        if (expr.includes('x')) return "Lineal / Afí";
+        return "Altres";
+    }
 
-        const labels = [], data = [], colors = [], radius = [];
+    function processarTot() {
+        let expr = "";
+        if (mode === 'logic') {
+            const n = document.getElementById('val-fix').value || 0;
+            const m = document.getElementById('val-var').value || 0;
+            expr = `${m} * x + ${n}`;
+            document.getElementById('main-input').value = expr;
+        } else {
+            expr = document.getElementById('main-input').value;
+        }
+
         try {
-            const f = math.compile(expr);
+            const node = math.parse(expr);
+            const f = node.compile();
+            const minX = parseFloat(document.getElementById('min-x').value);
+            const maxX = parseFloat(document.getElementById('max-x').value);
+            
+            const labels = [], data = [], points = [], pointColors = [];
+            const step = (maxX - minX) / 100;
+
             for (let x = minX; x <= maxX; x = math.round(x + step, 10)) {
                 let y = f.evaluate({x: x});
-                if (typeof y === 'number' && isFinite(y)) {
+                if (isFinite(y)) {
                     labels.push(x.toFixed(2));
                     data.push(y);
-                    // Detectar talls amb eixos
-                    if (Math.abs(y) < Math.abs(step * 2) || Math.abs(x) < Math.abs(step * 2)) {
-                        colors.push('#dc2626'); radius.push(5);
+                    // Lògica de detecció de punts de tall
+                    if (Math.abs(y) < Math.abs(step * 2) || Math.abs(x) < 0.001) {
+                        pointColors.push('#ef4444');
+                        points.push(6);
                     } else {
-                        colors.push('#2563eb'); radius.push(0);
+                        pointColors.push('#2563eb');
+                        points.push(0);
                     }
+                } else {
+                    labels.push(x.toFixed(2));
+                    data.push(null); // Per a les asímptotes
+                    pointColors.push(null); points.push(0);
                 }
             }
-            updateAnalysis(data, labels);
-            draw('line', labels, data, colors, radius);
-        } catch (e) { alert("Error en l'equació"); }
+
+            // Anàlisi
+            document.getElementById('results-area').style.display = 'block';
+            document.getElementById('label-tipus').innerText = detectarTipus(expr);
+            document.getElementById('res-eq').innerText = "y = " + node.toString();
+            document.getElementById('res-dom').innerText = `R o interval [${minX}, ${maxX}]`;
+            
+            const yFiltrat = data.filter(v => v !== null);
+            document.getElementById('res-im').innerText = `[${Math.min(...yFiltrat).toFixed(2)}, ${Math.max(...yFiltrat).toFixed(2)}]`;
+            
+            const tallY = f.evaluate({x: 0});
+            document.getElementById('res-tall').innerText = `Y(0, ${tallY.toFixed(2)}) + punts X vermells al gràfic`;
+
+            dibuixar(labels, data, pointColors, points);
+
+        } catch (e) { alert("Error en l'expressió."); }
     }
 
-    function renderDades() {
-        const text = document.getElementById('input-data').value;
-        const type = document.getElementById('chart-type').value;
-        const lines = text.split('\n');
-        const labels = [], data = [];
-
-        lines.forEach(line => {
-            const parts = line.split(',');
-            if (parts.length === 2) {
-                labels.push(parts[0].trim());
-                data.push(parseFloat(parts[1].trim()));
-            }
-        });
-
-        updateAnalysis(data, labels);
-        draw(type, labels, data, '#2563eb', 4);
-    }
-
-    function updateAnalysis(data, labels) {
-        const box = document.getElementById('box-results');
-        const out = document.getElementById('out-analysis');
-        if (data.length === 0) return;
-        
-        const min = Math.min(...data);
-        const max = Math.max(...data);
-        box.style.display = 'block';
-        out.innerHTML = `
-            <p>🔼 Màxim: ${max.toFixed(2)}</p>
-            <p>🔽 Mínim: ${min.toFixed(2)}</p>
-            <p>📏 Rang Y: [${min.toFixed(2)}, ${max.toFixed(2)}]</p>
-        `;
-    }
-
-    function draw(type, labels, data, pColors, pRadius) {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        if (myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
-            type: type,
+    function dibuixar(l, d, pc, pr) {
+        const ctx = document.getElementById('canvas').getContext('2d');
+        if (chart) chart.destroy();
+        chart = new Chart(ctx, {
+            type: 'line',
             data: {
-                labels: labels,
+                labels: l,
                 datasets: [{
-                    label: 'Valors',
-                    data: data,
+                    data: d,
                     borderColor: '#2563eb',
-                    backgroundColor: type === 'bar' ? 'rgba(37, 99, 235, 0.5)' : 'transparent',
-                    borderWidth: 2,
-                    pointBackgroundColor: pColors,
-                    pointRadius: pRadius,
-                    tension: 0.3
+                    borderWidth: 3,
+                    pointBackgroundColor: pc,
+                    pointRadius: pr,
+                    tension: 0.1,
+                    segment: { borderColor: ctx => ctx.p0.parsed.y * ctx.p1.parsed.y < -1000 ? 'transparent' : undefined } // Trenca línia en asímptotes
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: { beginAtZero: false, grid: { color: '#e2e8f0' } },
-                    x: { grid: { display: false } }
-                }
+                    x: { grid: { color: '#f1f5f9' } },
+                    y: { grid: { color: '#f1f5f9' } }
+                },
+                plugins: { legend: { display: false } }
             }
         });
     }
 
-    window.onload = processar;
+    window.onload = processarTot;
 </script>
 </body>
 </html>
