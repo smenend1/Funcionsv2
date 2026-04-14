@@ -3,62 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MathEngine PWA - Solucionari Universal</title>
+    <title>MathEngine Pro - Inspirat en Mathcraft</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <style>
-        :root { --p: #2563eb; --s: #0f172a; --bg: #f8fafc; --accent: #ef4444; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--s); margin: 0; padding: 20px; }
-        .container { display: grid; grid-template-columns: 450px 1fr; gap: 20px; max-width: 1600px; margin: 0 auto; }
-        @media (max-width: 1100px) { .container { grid-template-columns: 1fr; } }
+        :root { --p: #6366f1; --s: #1e293b; --bg: #f8fafc; --acc: #f43f5e; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--s); margin: 0; padding: 20px; }
+        .app-grid { display: grid; grid-template-columns: 400px 1fr; gap: 20px; max-width: 1400px; margin: 0 auto; }
+        @media (max-width: 1000px) { .app-grid { grid-template-columns: 1fr; } }
         
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        textarea { width: 100%; height: 100px; padding: 12px; border: 2px solid #cbd5e1; border-radius: 10px; font-size: 1rem; margin-top: 10px; }
-        button { width: 100%; padding: 15px; background: var(--p); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        /* Panell de Control */
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        .step { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f1f5f9; }
+        h3 { font-size: 0.9rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
         
-        /* Resultats Estil Fitxa */
-        .results-box { margin-top: 20px; background: var(--s); color: white; padding: 20px; border-radius: 12px; }
-        .eq-display { color: #38bdf8; font-size: 1.6rem; font-family: monospace; margin: 10px 0; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border-top: 1px solid #334155; pt: 15px; margin-top: 15px; }
-        .info-item b { display: block; color: #94a3b8; font-size: 0.7rem; text-transform: uppercase; }
-        
-        .table-wrap { margin-top: 15px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; color: white; }
-        th, td { border: 1px solid #334155; padding: 5px; text-align: center; }
+        select, input { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 1rem; margin-top: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: var(--p); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        button:hover { background: #4f46e5; transform: translateY(-2px); }
 
-        .chart-wrap { height: 600px; }
+        /* Resultats Estil App Premium */
+        .res-card { background: var(--s); color: white; padding: 20px; border-radius: 15px; margin-top: 20px; }
+        .formula { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; color: #818cf8; text-align: center; margin: 15px 0; }
+        .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; }
+        .stat b { display: block; font-size: 0.7rem; color: #94a3b8; }
+        
+        .chart-container { height: 100%; min-height: 500px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <aside>
+<div class="app-grid">
+    <aside class="sidebar">
         <div class="card">
-            <h2 style="margin:0">🧠 Analitzador de Problemes</h2>
-            <p style="font-size: 0.9rem; color: #64748b;">Escriu l'enunciat o la funció directament:</p>
-            <textarea id="userInput" placeholder="Ex: Tinc 10€ i cada dia en guanyo 2..."></textarea>
-            <button onclick="processar()">GENERAR SOLUCIÓ COMPLETA</button>
+            <h2 style="margin-top:0; color: var(--p);">MathEngine Pro</h2>
+            
+            <div class="step">
+                <h3>1. Quin tipus de problema és?</h3>
+                <select id="m-type" onchange="ui()">
+                    <option value="lin">Lineal (Cost fix + Variable)</option>
+                    <option value="quad">Quadràtica (Moviment / Àrees)</option>
+                    <option value="inv">Inversa (Repartiment / Temps)</option>
+                    <option value="txt">Escriure fórmula directament</option>
+                </select>
+            </div>
 
-            <div id="panel" class="results-box" style="display:none">
-                <div style="font-size: 0.7rem; opacity: 0.7;">EQUACIÓ PLANTEJADA:</div>
-                <div id="out-eq" class="eq-display"></div>
-                
-                <div class="info-grid">
-                    <div class="info-item"><b>Domini:</b><span id="out-dom"></span></div>
-                    <div class="info-item"><b>Imatge:</b><span id="out-im"></span></div>
-                    <div class="info-item"><b>Punt de Tall Y:</b><span id="out-ty"></span></div>
-                    <div class="info-item"><b>Punt de Tall X:</b><span id="out-tx"></span></div>
+            <div id="inputs" class="step">
                 </div>
 
-                <div class="table-wrap">
-                    <b>Taula de valors (Fitxa 2):</b>
-                    <table id="data-table"><thead><tr id="tr-h"></tr></thead><tbody><tr id="tr-b"></tr></tbody></table>
+            <button onclick="resoldre()">ANALITZAR ARA</button>
+
+            <div id="resultats" class="res-card" style="display:none">
+                <h3>Solució Analítica</h3>
+                <div id="out-eq" class="formula"></div>
+                <div class="analysis-grid">
+                    <div class="stat"><b>Domini (X)</b><span id="out-dom"></span></div>
+                    <div class="stat"><b>Imatge (Y)</b><span id="out-im"></span></div>
+                    <div class="stat"><b>Tall Eix Y</b><span id="out-ty"></span></div>
+                    <div class="stat"><b>Tall Eix X</b><span id="out-tx"></span></div>
                 </div>
             </div>
         </div>
     </aside>
 
-    <main class="card chart-wrap">
+    <main class="card chart-container">
         <canvas id="mainChart"></canvas>
     </main>
 </div>
@@ -66,92 +74,102 @@
 <script>
     let chart = null;
 
-    function processar() {
-        const text = document.getElementById('userInput').value;
-        let m = 0, n = 0;
-
-        // Lògica de traducció (Text -> Propietats)
-        const nums = text.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [0,0];
-        
-        if (text.includes("cada") || text.includes("per")) {
-            // Busquem quin és el valor que acompanya la variació
-            if (text.includes("fix") || text.includes("inicial") || text.includes("tinc")) {
-                n = nums[0]; m = nums[1] || 0;
-            } else {
-                m = nums[0]; n = nums[1] || 0;
-            }
+    function ui() {
+        const t = document.getElementById('m-type').value;
+        const box = document.getElementById('inputs');
+        if(t === 'lin') {
+            box.innerHTML = `
+                <label>Valor Inicial (n):</label><input type="number" id="v1" value="2.05">
+                <label>Creixement/unitat (m):</label><input type="number" id="v2" value="0.93">
+            `;
+        } else if(t === 'quad') {
+            box.innerHTML = `
+                <label>Coeficient a (x²):</label><input type="number" id="v1" value="1">
+                <label>Coeficient b (x):</label><input type="number" id="v2" value="-4">
+                <label>Terme c:</label><input type="number" id="v3" value="0">
+            `;
+        } else if(t === 'inv') {
+            box.innerHTML = `<label>Constant K (k/x):</label><input type="number" id="v1" value="100">`;
         } else {
-            // Si és una funció escrita com y=2x+3
-            try {
-                const clean = text.replace(/y\s*=\s*/, "").replace(/f\(x\)\s*=\s*/, "");
-                const node = math.parse(clean);
-                // Si és lineal, extraiem m i n per a l'anàlisi de punts de tall
-                m = node.evaluate({x: 1}) - node.evaluate({x: 0});
-                n = node.evaluate({x: 0});
-            } catch(e) { n = nums[0]; m = nums[1] || 0; }
+            box.innerHTML = `<label>Funció f(x):</label><input type="text" id="v1" value="x^2 - 4">`;
         }
-
-        // Correcció de signe
-        if (text.match(/gasto|perdo|baixa|disminueix/i)) m = -Math.abs(m);
-
-        analitzar(m, n);
     }
 
-    function analitzar(m, n) {
-        const expr = `${m}*x + ${n}`;
-        const f = math.compile(expr);
-        const labels = [], data = [], colors = [], radius = [];
+    function resoldre() {
+        const type = document.getElementById('m-type').value;
+        let expr = "";
         
-        // Càlcul de Domini i Imatge (Fitxa 3)
-        // Definim un interval de treball de 0 a 10 (comú a les fitxes)
-        for (let x = 0; x <= 10; x++) {
-            let y = f.evaluate({x: x});
-            labels.push(x);
-            data.push(y);
-            // Punts de Tall visuals (Fitxa 3)
-            if (Math.abs(y) < 0.1 || x === 0) { colors.push('#ef4444'); radius.push(7); }
-            else { colors.push('#2563eb'); radius.push(3); }
-        }
+        if(type === 'lin') expr = `${document.getElementById('v2').value} * x + ${document.getElementById('v1').value}`;
+        else if(type === 'quad') expr = `${document.getElementById('v1').value}*x^2 + ${document.getElementById('v2').value}*x + ${document.getElementById('v3').value}`;
+        else if(type === 'inv') expr = `${document.getElementById('v1').value} / x`;
+        else expr = document.getElementById('v1').value;
 
-        // Actualitzar UI
-        document.getElementById('panel').style.display = 'block';
-        document.getElementById('out-eq').innerText = `y = ${m}x ${n >= 0 ? '+ '+n : n}`;
-        document.getElementById('out-dom').innerText = "[0, 10]";
-        document.getElementById('out-im').innerText = `[${Math.min(...data).toFixed(1)}, ${Math.max(...data).toFixed(1)}]`;
-        document.getElementById('out-ty').innerText = `(0, ${n})`;
-        document.getElementById('out-tx').innerText = m !== 0 ? `(${( -n/m ).toFixed(2)}, 0)` : "Cap";
+        processar(expr);
+    }
 
-        // Omplir Taula (Fitxa 2)
-        const trH = document.getElementById('tr-h'), trB = document.getElementById('tr-b');
-        trH.innerHTML = '<th>x</th>' + labels.slice(0,6).map(l => `<th>${l}</th>`).join('');
-        trB.innerHTML = '<td>y</td>' + data.slice(0,6).map(d => `<td>${d.toFixed(1)}</td>`).join('');
+    function processar(expr) {
+        try {
+            const node = math.parse(expr);
+            const f = node.compile();
+            const labels = [], data = [], colors = [], radius = [];
+            
+            // Interval automàtic lògic
+            let xMin = -10, xMax = 10;
+            if(expr.includes('/') || expr.includes('x^2')) { xMin = -10; xMax = 10; } 
+            else { xMin = 0; xMax = 20; }
 
-        dibuixar(labels, data, colors, radius);
+            const pas = (xMax - xMin) / 50;
+            for(let x = xMin; x <= xMax; x = math.round(x + pas, 10)) {
+                let y = f.evaluate({x: x});
+                if(isFinite(y)) {
+                    labels.push(x.toFixed(1));
+                    data.push(y);
+                    // Punts de Tall (Fitxa 3)
+                    if(Math.abs(y) < 0.5 || Math.abs(x) < 0.1) { colors.push('#f43f5e'); radius.push(6); }
+                    else { colors.push('#6366f1'); radius.push(0); }
+                } else {
+                    labels.push(x); data.push(null); colors.push(null); radius.push(0);
+                }
+            }
+
+            // UI
+            document.getElementById('resultats').style.display = 'block';
+            document.getElementById('out-eq').innerText = "y = " + node.toString();
+            document.getElementById('out-dom').innerText = `[${xMin}, ${xMax}]`;
+            document.getElementById('out-im').innerText = `[${Math.min(...data.filter(v=>v!=null)).toFixed(1)}, ${Math.max(...data.filter(v=>v!=null)).toFixed(1)}]`;
+            
+            const ty = f.evaluate({x:0});
+            document.getElementById('out-ty').innerText = isFinite(ty) ? `(0, ${ty})` : "No existeix";
+            document.getElementById('out-tx').innerText = "Veure punts vermells";
+
+            dibuixar(labels, data, colors, radius);
+        } catch(e) { alert("Error en l'expressió matemàtica"); }
     }
 
     function dibuixar(l, d, c, r) {
         const ctx = document.getElementById('mainChart').getContext('2d');
-        if (chart) chart.destroy();
+        if(chart) chart.destroy();
         chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: l,
                 datasets: [{
-                    data: d, borderColor: '#2563eb', borderWidth: 3,
-                    pointBackgroundColor: c, pointRadius: r, tension: 0.1
+                    data: d, borderColor: '#6366f1', borderWidth: 4,
+                    pointBackgroundColor: c, pointRadius: r, tension: 0.3, fill: false
                 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                scales: {
-                    x: { title: { display: true, text: 'Variable x' } },
-                    y: { title: { display: true, text: 'Variable y' } }
+                plugins: { legend: { display: false } },
+                scales: { 
+                    x: { grid: { display: false } },
+                    y: { grid: { color: '#f1f5f9' } }
                 }
             }
         });
     }
 
-    window.onload = () => { processar(); }
+    window.onload = () => { ui(); resoldre(); };
 </script>
 </body>
 </html>
