@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#007bff">
+    <title>MathPWA Engine Pro</title>
+    <link rel="manifest" href="manifest.json">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+
+    <style>
+        :root {
+            --bg: #f0f2f5; --card-bg: #ffffff; --text: #1a1a1b;
+            --primary: #007bff; --secondary: #6c757d; --border: #dcdfe3;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #121212; --card-bg: #1e1e1e; --text: #e0e0e0; --border: #333; }
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        header { background: var(--primary); color: white; padding: 1rem; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .container { display: grid; grid-template-columns: 380px 1fr; gap: 20px; padding: 20px; max-width: 1600px; margin: 0 auto; }
+        @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); box-sizing: border-box; font-size: 1rem; margin-bottom: 10px; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 8px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { filter: brightness(1.1); }
+        .result-box { background: rgba(0, 123, 255, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary); margin-top: 15px; }
+        .chart-container { height: 450px; }
+    </style>
+</head>
+<body>
+
+<header><h1>MathPWA Engine Pro</h1></header>
+
+<div class="container">
+    <aside>
+        <div class="card">
+            <label><b>Funció f(x):</b></label>
+            <input type="text" id="funcInput" value="x^2 - 4" placeholder="Ex: sin(x) + 2x">
+            
+            <div style="display:flex; gap:10px">
+                <div><label>Min X</label><input type="number" id="minX" value="-5"></div>
+                <div><label>Max X</label><input type="number" id="maxX" value="5"></div>
+            </div>
+
+            <button onclick="render()">Analitzar i Dibuixar</button>
+
+            <div id="analisiResultats" class="result-box" style="display:none">
+                <div id="detalls"></div>
+            </div>
+        </div>
+    </aside>
+
+    <main>
+        <div class="card chart-container">
+            <canvas id="canvasChart"></canvas>
+        </div>
+    </main>
+</div>
+
+<script>
+    let chartInstance = null;
+
+    // Escolta la tecla Enter per comoditat
+    document.getElementById('funcInput').addEventListener('keypress', e => { if (e.key === 'Enter') render(); });
+
+    function render() {
+        const expr = document.getElementById('funcInput').value;
+        const min = parseFloat(document.getElementById('minX').value);
+        const max = parseFloat(document.getElementById('maxX').value);
+        const detalls = document.getElementById('detalls');
+        const box = document.getElementById('analisiResultats');
+
+        try {
+            // 1. ANÀLISI ANALÍTIC (Simbòlic)
+            const node = math.parse(expr);
+            const f = node.compile();
+            const derivada = math.derivative(expr, 'x');
+            const tallY = f.evaluate({x: 0});
+
+            // 2. GENERACIÓ DE DADES PER AL GRÀFIC
+            const xData = [], yData = [];
+            for (let x = min; x <= max; x = math.round(x + 0.1, 10)) {
+                let y = f.evaluate({x: x});
+                if (typeof y === 'number' && isFinite(y)) {
+                    xData.push(x);
+                    yData.push(y);
+                }
+            }
+
+            // 3. CÀLCUL D'IMATGE I ARRELS
+            const imatgeMin = Math.min(...yData);
+            const imatgeMax = Math.max(...yData);
+            let arrels = [];
+            for (let i = 0; i < yData.length - 1; i++) {
+                if (yData[i] * yData[i+1] <= 0) arrels.push(xData[i].toFixed(2));
+            }
+
+            // MOSTRAR RESULTATS
+            box.style.display = 'block';
+            detalls.innerHTML = `
+                <p>📈 <b>Derivada:</b> f'(x) = ${derivada.toString()}</p>
+                <p>📍 <b>Tall Eix Y:</b> (0, ${tallY})</p>
+                <p>📍 <b>Talls Eix X (Arrels):</b> ${arrels.length > 0 ? arrels.join(', ') : 'Cap'}</p>
+                <p>🖼️ <b>Imatge:</b> [${imatgeMin.toFixed(2)}, ${imatgeMax.toFixed(2)}]</p>
+            `;
+
+            drawChart(xData, yData);
+        } catch (e) {
+            alert("Error en la funció: " + e.message);
+        }
+    }
+
+    function drawChart(labels, data) {
+        const ctx = document.getElementById('canvasChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'f(x)',
+                    data: data,
+                    borderColor: '#007bff',
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    fill: true,
+                    backgroundColor: 'rgba(0, 123, 255, 0.05)',
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { color: 'rgba(0,0,0,0.05)' } },
+                    y: { grid: { color: 'rgba(0,0,0,0.05)' } }
+                }
+            }
+        });
+    }
+
+    // Registre del Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
+    }
+
+    window.onload = render;
+</script>
+</body>
+</html>
