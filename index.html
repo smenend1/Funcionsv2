@@ -3,158 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MathEngine Universal AI</title>
+    <title>MathEngine AI - Resoledor d'Enunciats</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <style>
-        :root { --p: #2563eb; --bg: #f8fafc; --card: #ffffff; --txt: #1e293b; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--txt); margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        header { background: var(--p); color: white; padding: 1rem; text-align: center; font-weight: bold; }
-        .main-layout { display: grid; grid-template-columns: 450px 1fr; gap: 20px; padding: 20px; flex: 1; overflow: hidden; }
-        @media (max-width: 1000px) { .main-layout { grid-template-columns: 1fr; overflow: auto; } }
-        .sidebar { display: flex; flex-direction: column; gap: 15px; overflow-y: auto; padding-right: 5px; }
-        .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        select, input, textarea { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-size: 1rem; }
-        .btn-solve { background: var(--p); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
-        .result-panel { background: #f1f5f9; padding: 15px; border-radius: 10px; border-left: 5px solid var(--p); margin-top: 15px; }
-        .chart-container { position: relative; height: 100%; min-height: 400px; }
-        .hidden { display: none; }
-        .formula-display { font-family: 'Courier New', monospace; background: #000; color: #0f0; padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 1.1rem; text-align: center; }
+        :root { --p: #2563eb; --accent: #ef4444; --bg: #f8fafc; --card: #ffffff; --txt: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding: 20px; }
+        .container { display: grid; grid-template-columns: 450px 1fr; gap: 20px; max-width: 1600px; margin: 0 auto; }
+        @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } }
+        .card { background: var(--card); padding: 25px; border-radius: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        h2 { color: var(--p); margin-top: 0; font-size: 1.3rem; margin-bottom: 10px; }
+        textarea { width: 100%; height: 100px; padding: 12px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        
+        /* Estils de les dades d'anàlisi */
+        .analysis-results { margin-top: 20px; background: #0f172a; color: #f8fafc; padding: 20px; border-radius: 12px; }
+        .formula-box { font-family: 'Courier New', monospace; font-size: 1.5rem; color: #38bdf8; margin: 10px 0; border-bottom: 1px solid #334155; padding-bottom: 10px; }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.9rem; }
+        .data-item b { color: #94a3b8; display: block; font-size: 0.75rem; text-transform: uppercase; }
+        
+        .chart-wrap { height: 600px; }
+        .tag { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<header>MathEngine AI: Resoledor Universal de Problemes</header>
-
-<div class="main-layout">
-    <div class="sidebar">
+<div class="container">
+    <aside>
         <div class="card">
-            <h3>1. Identifica l'estructura del problema</h3>
-            <select id="model-selector" onchange="updateUI()">
-                <option value="lineal">📊 Creixement Constant (Ex: Preus, km, molles, gas)</option>
-                <option value="edats">👥 Relació de dues persones (Edats actuals i futures)</option>
-                <option value="inversa">📉 Repartiment o Velocitat (Proporcionalitat inversa)</option>
-                <option value="manual">✏️ Tinc la meva pròpia equació (f(x) = ...)</option>
-            </select>
+            <h2>🤖 Traductor Lògic</h2>
+            <p style="font-size: 0.9rem; color: #64748b;">Escriu el problema tal com raja. L'app detectarà els valors clau.</p>
+            <textarea id="userInput" placeholder="Ex: El taxi costa 2 d'entrada i 1 per km..."></textarea>
+            <button onclick="analitzarProblema()">GENERAR I ANALITZAR</button>
 
-            <div id="ui-lineal">
-                <label>Quant val al principi? (Valor fix/n):</label>
-                <input type="number" id="l-n" placeholder="Ex: 2.05 o 30">
-                <label>Quant puja/baixa per cada unitat? (m):</label>
-                <input type="number" id="l-m" placeholder="Ex: 0.93 o 10">
+            <div id="results" class="analysis-results" style="display:none">
+                <span class="tag">ANÀLISI AUTOMÀTIC</span>
+                <div id="out-eq" class="formula-box"></div>
+                
+                <div class="data-grid">
+                    <div class="data-item"><b>Domini (Eix X)</b><span id="out-dom">-</span></div>
+                    <div class="data-item"><b>Imatge (Eix Y)</b><span id="out-im">-</span></div>
+                    <div class="data-item"><b>Tall Eix Y</b><span id="out-ty">-</span></div>
+                    <div class="data-item"><b>Tall Eix X</b><span id="out-tx">-</span></div>
+                </div>
+                
+                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #334155;">
+                    <b>💡 Interpretació:</b>
+                    <p id="out-desc" style="font-size: 0.85rem; color: #cbd5e1; margin-top: 5px;"></p>
+                </div>
             </div>
-
-            <div id="ui-edats" class="hidden">
-                <label>Edat de la persona 1 avui:</label>
-                <input type="number" id="e-a" placeholder="Ex: 40">
-                <label>Edat de la persona 2 avui:</label>
-                <input type="number" id="e-b" placeholder="Ex: 10">
-            </div>
-
-            <div id="ui-inversa" class="hidden">
-                <label>Valor total a repartir (k):</label>
-                <input type="number" id="i-k" placeholder="Ex: 100">
-            </div>
-
-            <div id="ui-manual" class="hidden">
-                <label>Escriu l'expressió algebraica:</label>
-                <input type="text" id="m-eq" value="x^2 - 4">
-            </div>
-
-            <button class="btn-solve" onclick="executarAnalisi()">GENERAR SOLUCIÓ</button>
         </div>
+    </aside>
 
-        <div id="panel-resultats" class="card hidden">
-            <h3>2. Anàlisi del Sistema</h3>
-            <div id="f-output" class="formula-display"></div>
-            <div id="text-output" class="result-panel"></div>
-        </div>
-    </div>
-
-    <div class="card chart-container">
+    <main class="card chart-wrap">
         <canvas id="mainChart"></canvas>
-    </div>
+    </main>
 </div>
 
 <script>
     let myChart = null;
 
-    function updateUI() {
-        const val = document.getElementById('model-selector').value;
-        ['ui-lineal', 'ui-edats', 'ui-inversa', 'ui-manual'].forEach(id => {
-            document.getElementById(id).classList.toggle('hidden', id !== 'ui-' + val);
-        });
-    }
+    function analitzarProblema() {
+        const text = document.getElementById('userInput').value.toLowerCase();
+        const numeros = text.match(/\d+(?:\.\d+)?/g);
+        
+        if (!numeros) { alert("Si us plau, introdueix números a l'enunciat."); return; }
+        const nums = numeros.map(Number);
 
-    function executarAnalisi() {
-        const model = document.getElementById('model-selector').value;
-        let expr = "";
-        let descripcio = "";
-        let xMin = -5, xMax = 15;
-
-        if (model === 'lineal') {
-            const m = parseFloat(document.getElementById('l-m').value) || 0;
-            const n = parseFloat(document.getElementById('l-n').value) || 0;
-            expr = `${m} * x + ${n}`;
-            descripcio = `Aquesta és una funció lineal. Comença en ${n} i varia ${m} unitats per cada x.`;
-        } else if (model === 'edats') {
-            const a = parseFloat(document.getElementById('e-a').value) || 0;
-            const b = parseFloat(document.getElementById('e-b').value) || 0;
-            expr = `(${a} + x) / (${b} + x)`;
-            descripcio = `Analitzem quantes vegades l'edat de la persona A serà més gran que la B amb el pas dels anys (x).`;
-            xMin = 0; xMax = 100;
-        } else if (model === 'inversa') {
-            const k = parseFloat(document.getElementById('i-k').value) || 1;
-            expr = `${k} / x`;
-            descripcio = `Proporcionalitat inversa. Si x augmenta, y disminueix dràsticament.`;
-            xMin = 1;
-        } else {
-            expr = document.getElementById('m-eq').value;
-            descripcio = "Anàlisi lliure de l'expressió introduïda.";
-        }
-
-        processarDades(expr, descripcio, xMin, xMax);
-    }
-
-    function processarDades(expr, desc, xMin, xMax) {
-        try {
-            const node = math.parse(expr);
-            const f = node.compile();
-            const labels = [], data = [], colors = [], radius = [];
-            
-            const step = (xMax - xMin) / 100;
-            for (let x = xMin; x <= xMax; x = math.round(x + step, 10)) {
-                let y = f.evaluate({x: x});
-                if (isFinite(y)) {
-                    labels.push(x.toFixed(1));
-                    data.push(y);
-                    // Detecció punts de tall (vermell)
-                    if (Math.abs(y) < 0.2 || Math.abs(x) < 0.01) {
-                        colors.push('#ef4444'); radius.push(6);
-                    } else {
-                        colors.push('#2563eb'); radius.push(0);
-                    }
+        let m = 0, n = 0, desc = "";
+        
+        // Lògica de traducció automàtica (Intel·ligència de paraules clau)
+        if (text.includes("cada") || text.includes("per") || text.includes("per cada")) {
+            // El número que va amb "cada" acostuma a ser el pendent (m)
+            // L'altre és el fix (n)
+            if (nums.length >= 2) {
+                // Si l'usuari diu "X cada Y", m sol ser el primer o segon depenent del context
+                // Busquem paraules de "valor inicial"
+                if (text.includes("fix") || text.includes("inicial") || text.includes("tinc") || text.includes("comença")) {
+                    n = nums[0]; m = nums[1];
+                } else {
+                    m = nums[0]; n = nums[1] || 0;
                 }
+            } else {
+                m = nums[0]; n = 0;
             }
 
-            // UI de resultats
-            document.getElementById('panel-resultats').classList.remove('hidden');
-            document.getElementById('f-output').innerText = "y = " + node.toString();
+            if (text.includes("gasto") || text.includes("baixa") || text.includes("perd")) m = -Math.abs(m);
+            desc = `Hem detectat una relació lineal on el valor canvia en ${m} unitats per cada x.`;
+        } else {
+            // Si no hi ha "cada", suposem que són dades estàtiques o un altre model
+            n = nums[0]; m = nums[1] || 0;
+            desc = "S'ha generat una interpretació directa dels números trobats.";
+        }
+
+        executarMotor(m, n, desc);
+    }
+
+    function executarMotor(m, n, desc) {
+        const expr = `${m} * x + ${n}`;
+        const f = math.compile(expr);
+        
+        const labels = [], data = [], colors = [], radius = [];
+        const xMin = 0, xMax = 20; // Rang estàndard per a problemes escolars
+
+        for (let x = xMin; x <= xMax; x++) {
+            let y = f.evaluate({x: x});
+            labels.push(x);
+            data.push(y);
             
-            const yValid = data.filter(v => v !== null);
-            const imatgeMin = Math.min(...yValid).toFixed(2);
-            const imatgeMax = Math.max(...yValid).toFixed(2);
-            const tallY = f.evaluate({x: 0});
+            // Lògica de Punts de Tall (vermell i gran al gràfic)
+            if (Math.abs(y) < 0.5 || x === 0) {
+                colors.push('#ef4444'); radius.push(7);
+            } else {
+                colors.push('#2563eb'); radius.push(2);
+            }
+        }
 
-            document.getElementById('text-output').innerHTML = `
-                <p><b>📏 Domini:</b> Tots els valors reals entre ${xMin} i ${xMax}.</p>
-                <p><b>🖼️ Imatge (Recorregut):</b> [${imatgeMin}, ${imatgeMax}]</p>
-                <p><b>📍 Punts de tall:</b> Tall Y a (0, ${isFinite(tallY) ? tallY.toFixed(2) : 'No existeix'}). Talls X en vermell.</p>
-                <p><i>${desc}</i></p>
-            `;
+        // Càlculs d'anàlisi real (Fitxa 3)
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('out-eq').innerText = `y = ${m}x + ${n}`;
+        document.getElementById('out-dom').innerText = `[${xMin}, ${xMax}] (en el context)`;
+        document.getElementById('out-im').innerText = `[${Math.min(...data).toFixed(1)}, ${Math.max(...data).toFixed(1)}]`;
+        document.getElementById('out-ty').innerText = `(0, ${n})`;
+        
+        const tallX = m !== 0 ? (-n / m).toFixed(2) : "Cap";
+        document.getElementById('out-tx').innerText = tallX;
+        document.getElementById('out-desc').innerText = desc;
 
-            dibuixar(labels, data, colors, radius);
-        } catch (e) { alert("Error en el càlcul. Revisa l'equació."); }
+        dibuixar(labels, data, colors, radius);
     }
 
     function dibuixar(l, d, c, r) {
@@ -165,15 +141,32 @@
             data: {
                 labels: l,
                 datasets: [{
-                    data: d, borderColor: '#2563eb', borderWidth: 3,
-                    pointBackgroundColor: c, pointRadius: r, tension: 0.1, fill: false
+                    label: 'Representació de la funció',
+                    data: d,
+                    borderColor: '#2563eb',
+                    borderWidth: 3,
+                    pointBackgroundColor: c,
+                    pointRadius: r,
+                    tension: 0.1,
+                    fill: false
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { grid: { color: '#f1f5f9' } },
+                    x: { grid: { color: '#f1f5f9' }, title: { display: true, text: 'Variable Independent (x)' } }
+                }
+            }
         });
     }
 
-    window.onload = executarAnalisi;
+    window.onload = () => {
+        // Explicació per defecte
+        document.getElementById('userInput').value = "Un taxi cobra 2.05 de baixada i 0.93 per cada km.";
+        analitzarProblema();
+    };
 </script>
 </body>
 </html>
