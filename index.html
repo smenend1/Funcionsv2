@@ -3,27 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MathEngine AI - Resoledor d'Enunciats</title>
+    <title>MathEngine PWA - Solucionari Universal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <style>
-        :root { --p: #2563eb; --accent: #ef4444; --bg: #f8fafc; --card: #ffffff; --txt: #1e293b; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding: 20px; }
+        :root { --p: #2563eb; --s: #0f172a; --bg: #f8fafc; --accent: #ef4444; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--s); margin: 0; padding: 20px; }
         .container { display: grid; grid-template-columns: 450px 1fr; gap: 20px; max-width: 1600px; margin: 0 auto; }
-        @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } }
-        .card { background: var(--card); padding: 25px; border-radius: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        h2 { color: var(--p); margin-top: 0; font-size: 1.3rem; margin-bottom: 10px; }
-        textarea { width: 100%; height: 100px; padding: 12px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        @media (max-width: 1100px) { .container { grid-template-columns: 1fr; } }
         
-        /* Estils de les dades d'anàlisi */
-        .analysis-results { margin-top: 20px; background: #0f172a; color: #f8fafc; padding: 20px; border-radius: 12px; }
-        .formula-box { font-family: 'Courier New', monospace; font-size: 1.5rem; color: #38bdf8; margin: 10px 0; border-bottom: 1px solid #334155; padding-bottom: 10px; }
-        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.9rem; }
-        .data-item b { color: #94a3b8; display: block; font-size: 0.75rem; text-transform: uppercase; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        textarea { width: 100%; height: 100px; padding: 12px; border: 2px solid #cbd5e1; border-radius: 10px; font-size: 1rem; margin-top: 10px; }
+        button { width: 100%; padding: 15px; background: var(--p); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         
+        /* Resultats Estil Fitxa */
+        .results-box { margin-top: 20px; background: var(--s); color: white; padding: 20px; border-radius: 12px; }
+        .eq-display { color: #38bdf8; font-size: 1.6rem; font-family: monospace; margin: 10px 0; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border-top: 1px solid #334155; pt: 15px; margin-top: 15px; }
+        .info-item b { display: block; color: #94a3b8; font-size: 0.7rem; text-transform: uppercase; }
+        
+        .table-wrap { margin-top: 15px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; color: white; }
+        th, td { border: 1px solid #334155; padding: 5px; text-align: center; }
+
         .chart-wrap { height: 600px; }
-        .tag { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -31,25 +34,25 @@
 <div class="container">
     <aside>
         <div class="card">
-            <h2>🤖 Traductor Lògic</h2>
-            <p style="font-size: 0.9rem; color: #64748b;">Escriu el problema tal com raja. L'app detectarà els valors clau.</p>
-            <textarea id="userInput" placeholder="Ex: El taxi costa 2 d'entrada i 1 per km..."></textarea>
-            <button onclick="analitzarProblema()">GENERAR I ANALITZAR</button>
+            <h2 style="margin:0">🧠 Analitzador de Problemes</h2>
+            <p style="font-size: 0.9rem; color: #64748b;">Escriu l'enunciat o la funció directament:</p>
+            <textarea id="userInput" placeholder="Ex: Tinc 10€ i cada dia en guanyo 2..."></textarea>
+            <button onclick="processar()">GENERAR SOLUCIÓ COMPLETA</button>
 
-            <div id="results" class="analysis-results" style="display:none">
-                <span class="tag">ANÀLISI AUTOMÀTIC</span>
-                <div id="out-eq" class="formula-box"></div>
+            <div id="panel" class="results-box" style="display:none">
+                <div style="font-size: 0.7rem; opacity: 0.7;">EQUACIÓ PLANTEJADA:</div>
+                <div id="out-eq" class="eq-display"></div>
                 
-                <div class="data-grid">
-                    <div class="data-item"><b>Domini (Eix X)</b><span id="out-dom">-</span></div>
-                    <div class="data-item"><b>Imatge (Eix Y)</b><span id="out-im">-</span></div>
-                    <div class="data-item"><b>Tall Eix Y</b><span id="out-ty">-</span></div>
-                    <div class="data-item"><b>Tall Eix X</b><span id="out-tx">-</span></div>
+                <div class="info-grid">
+                    <div class="info-item"><b>Domini:</b><span id="out-dom"></span></div>
+                    <div class="info-item"><b>Imatge:</b><span id="out-im"></span></div>
+                    <div class="info-item"><b>Punt de Tall Y:</b><span id="out-ty"></span></div>
+                    <div class="info-item"><b>Punt de Tall X:</b><span id="out-tx"></span></div>
                 </div>
-                
-                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #334155;">
-                    <b>💡 Interpretació:</b>
-                    <p id="out-desc" style="font-size: 0.85rem; color: #cbd5e1; margin-top: 5px;"></p>
+
+                <div class="table-wrap">
+                    <b>Taula de valors (Fitxa 2):</b>
+                    <table id="data-table"><thead><tr id="tr-h"></tr></thead><tbody><tr id="tr-b"></tr></tbody></table>
                 </div>
             </div>
         </div>
@@ -61,112 +64,94 @@
 </div>
 
 <script>
-    let myChart = null;
+    let chart = null;
 
-    function analitzarProblema() {
-        const text = document.getElementById('userInput').value.toLowerCase();
-        const numeros = text.match(/\d+(?:\.\d+)?/g);
-        
-        if (!numeros) { alert("Si us plau, introdueix números a l'enunciat."); return; }
-        const nums = numeros.map(Number);
+    function processar() {
+        const text = document.getElementById('userInput').value;
+        let m = 0, n = 0;
 
-        let m = 0, n = 0, desc = "";
+        // Lògica de traducció (Text -> Propietats)
+        const nums = text.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [0,0];
         
-        // Lògica de traducció automàtica (Intel·ligència de paraules clau)
-        if (text.includes("cada") || text.includes("per") || text.includes("per cada")) {
-            // El número que va amb "cada" acostuma a ser el pendent (m)
-            // L'altre és el fix (n)
-            if (nums.length >= 2) {
-                // Si l'usuari diu "X cada Y", m sol ser el primer o segon depenent del context
-                // Busquem paraules de "valor inicial"
-                if (text.includes("fix") || text.includes("inicial") || text.includes("tinc") || text.includes("comença")) {
-                    n = nums[0]; m = nums[1];
-                } else {
-                    m = nums[0]; n = nums[1] || 0;
-                }
+        if (text.includes("cada") || text.includes("per")) {
+            // Busquem quin és el valor que acompanya la variació
+            if (text.includes("fix") || text.includes("inicial") || text.includes("tinc")) {
+                n = nums[0]; m = nums[1] || 0;
             } else {
-                m = nums[0]; n = 0;
+                m = nums[0]; n = nums[1] || 0;
             }
-
-            if (text.includes("gasto") || text.includes("baixa") || text.includes("perd")) m = -Math.abs(m);
-            desc = `Hem detectat una relació lineal on el valor canvia en ${m} unitats per cada x.`;
         } else {
-            // Si no hi ha "cada", suposem que són dades estàtiques o un altre model
-            n = nums[0]; m = nums[1] || 0;
-            desc = "S'ha generat una interpretació directa dels números trobats.";
+            // Si és una funció escrita com y=2x+3
+            try {
+                const clean = text.replace(/y\s*=\s*/, "").replace(/f\(x\)\s*=\s*/, "");
+                const node = math.parse(clean);
+                // Si és lineal, extraiem m i n per a l'anàlisi de punts de tall
+                m = node.evaluate({x: 1}) - node.evaluate({x: 0});
+                n = node.evaluate({x: 0});
+            } catch(e) { n = nums[0]; m = nums[1] || 0; }
         }
 
-        executarMotor(m, n, desc);
+        // Correcció de signe
+        if (text.match(/gasto|perdo|baixa|disminueix/i)) m = -Math.abs(m);
+
+        analitzar(m, n);
     }
 
-    function executarMotor(m, n, desc) {
-        const expr = `${m} * x + ${n}`;
+    function analitzar(m, n) {
+        const expr = `${m}*x + ${n}`;
         const f = math.compile(expr);
-        
         const labels = [], data = [], colors = [], radius = [];
-        const xMin = 0, xMax = 20; // Rang estàndard per a problemes escolars
-
-        for (let x = xMin; x <= xMax; x++) {
+        
+        // Càlcul de Domini i Imatge (Fitxa 3)
+        // Definim un interval de treball de 0 a 10 (comú a les fitxes)
+        for (let x = 0; x <= 10; x++) {
             let y = f.evaluate({x: x});
             labels.push(x);
             data.push(y);
-            
-            // Lògica de Punts de Tall (vermell i gran al gràfic)
-            if (Math.abs(y) < 0.5 || x === 0) {
-                colors.push('#ef4444'); radius.push(7);
-            } else {
-                colors.push('#2563eb'); radius.push(2);
-            }
+            // Punts de Tall visuals (Fitxa 3)
+            if (Math.abs(y) < 0.1 || x === 0) { colors.push('#ef4444'); radius.push(7); }
+            else { colors.push('#2563eb'); radius.push(3); }
         }
 
-        // Càlculs d'anàlisi real (Fitxa 3)
-        document.getElementById('results').style.display = 'block';
-        document.getElementById('out-eq').innerText = `y = ${m}x + ${n}`;
-        document.getElementById('out-dom').innerText = `[${xMin}, ${xMax}] (en el context)`;
+        // Actualitzar UI
+        document.getElementById('panel').style.display = 'block';
+        document.getElementById('out-eq').innerText = `y = ${m}x ${n >= 0 ? '+ '+n : n}`;
+        document.getElementById('out-dom').innerText = "[0, 10]";
         document.getElementById('out-im').innerText = `[${Math.min(...data).toFixed(1)}, ${Math.max(...data).toFixed(1)}]`;
         document.getElementById('out-ty').innerText = `(0, ${n})`;
-        
-        const tallX = m !== 0 ? (-n / m).toFixed(2) : "Cap";
-        document.getElementById('out-tx').innerText = tallX;
-        document.getElementById('out-desc').innerText = desc;
+        document.getElementById('out-tx').innerText = m !== 0 ? `(${( -n/m ).toFixed(2)}, 0)` : "Cap";
+
+        // Omplir Taula (Fitxa 2)
+        const trH = document.getElementById('tr-h'), trB = document.getElementById('tr-b');
+        trH.innerHTML = '<th>x</th>' + labels.slice(0,6).map(l => `<th>${l}</th>`).join('');
+        trB.innerHTML = '<td>y</td>' + data.slice(0,6).map(d => `<td>${d.toFixed(1)}</td>`).join('');
 
         dibuixar(labels, data, colors, radius);
     }
 
     function dibuixar(l, d, c, r) {
         const ctx = document.getElementById('mainChart').getContext('2d');
-        if (myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
+        if (chart) chart.destroy();
+        chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: l,
                 datasets: [{
-                    label: 'Representació de la funció',
-                    data: d,
-                    borderColor: '#2563eb',
-                    borderWidth: 3,
-                    pointBackgroundColor: c,
-                    pointRadius: r,
-                    tension: 0.1,
-                    fill: false
+                    data: d, borderColor: '#2563eb', borderWidth: 3,
+                    pointBackgroundColor: c, pointRadius: r, tension: 0.1
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 scales: {
-                    y: { grid: { color: '#f1f5f9' } },
-                    x: { grid: { color: '#f1f5f9' }, title: { display: true, text: 'Variable Independent (x)' } }
+                    x: { title: { display: true, text: 'Variable x' } },
+                    y: { title: { display: true, text: 'Variable y' } }
                 }
             }
         });
     }
 
-    window.onload = () => {
-        // Explicació per defecte
-        document.getElementById('userInput').value = "Un taxi cobra 2.05 de baixada i 0.93 per cada km.";
-        analitzarProblema();
-    };
+    window.onload = () => { processar(); }
 </script>
 </body>
 </html>
