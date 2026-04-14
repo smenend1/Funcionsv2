@@ -1,7 +1,7 @@
 {
   "name": "MathPWA Engine Pro",
   "short_name": "MathPWA",
-  "start_url": "funcions.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#f0f2f5",
   "theme_color": "#007bff",
