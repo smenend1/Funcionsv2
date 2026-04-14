@@ -1,10 +1,10 @@
 {
-  "name": "MathPWA Engine Pro",
-  "short_name": "MathPWA",
+  "name": "MathEngine Pro",
+  "short_name": "MathEngine",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#f0f2f5",
-  "theme_color": "#007bff",
+  "background_color": "#ffffff",
+  "theme_color": "#0070f3",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2344/2344132.png",
