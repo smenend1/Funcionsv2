@@ -3,276 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MathPWA Expert - Analitzador de Funcions</title>
+    <title>MathEngine Universal</title>
     <link rel="manifest" href="manifest.json">
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
-
     <style>
         :root {
-            --primary: #1e3a8a; /* Blau fosc professional */
-            --accent: #ef4444;  /* Vermell per a punts clau */
-            --bg: #f1f5f9;
-            --card: #ffffff;
-            --text: #0f172a;
-            --border: #e2e8f0;
+            --primary: #2563eb; --accent: #dc2626; --bg: #f8fafc;
+            --card: #ffffff; --text: #1e293b; --border: #cbd5e1;
         }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg: #0f172a;
-                --card: #1e293b;
-                --text: #f8fafc;
-                --border: #334155;
-            }
-        }
-
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 0;
-        }
-
-        header {
-            background: var(--primary);
-            color: white;
-            padding: 1.5rem;
-            text-align: center;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        }
-
-        .container {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 20px;
-            padding: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        @media (max-width: 900px) {
-            .container { grid-template-columns: 1fr; }
-        }
-
-        .card {
-            background: var(--card);
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid var(--border);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem; }
-        
-        input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            background: var(--bg);
-            color: var(--text);
-            box-sizing: border-box;
-            font-size: 1rem;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        button:hover { opacity: 0.9; }
-
-        .analysis-box {
-            margin-top: 20px;
-            background: rgba(30, 58, 138, 0.05);
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid var(--primary);
-        }
-
-        .analysis-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            font-size: 0.85rem;
-        }
-
-        .chart-container { height: 450px; position: relative; }
-        
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            background: var(--primary);
-            color: white;
-        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        header { background: var(--primary); color: white; padding: 1rem; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .container { display: grid; grid-template-columns: 380px 1fr; gap: 20px; padding: 20px; max-width: 1400px; margin: 0 auto; }
+        @media (max-width: 950px) { .container { grid-template-columns: 1fr; } }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #e2e8f0; padding: 5px; border-radius: 8px; }
+        .tab { flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; background: none; font-weight: bold; color: #64748b; }
+        .tab.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        label { display: block; font-weight: 600; margin: 10px 0 5px; font-size: 0.9rem; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-size: 0.95rem; background: #fff; color: var(--text); }
+        button.main-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .results { margin-top: 20px; padding: 15px; background: #f1f5f9; border-radius: 8px; font-size: 0.9rem; border-left: 4px solid var(--primary); }
+        .chart-container { height: 500px; min-height: 300px; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>MathPWA Engine Pro</h1>
-    <p style="margin: 5px 0 0; font-size: 0.9rem; opacity: 0.8;">Analitzador segons Fitxes Educatives</p>
+    <h1>MathEngine Universal</h1>
 </header>
 
 <div class="container">
     <aside>
         <div class="card">
-            <div class="input-group">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('func')">Equació</button>
+                <button class="tab" onclick="switchTab('data')">Dades Lliures</button>
+            </div>
+
+            <div id="panel-func">
                 <label>Funció f(x):</label>
-                <input type="text" id="funcInput" value="x^2 - 4" placeholder="Ex: 2x + 3, x^2, sin(x)">
-            </div>
-
-            <div style="display: flex; gap: 10px;" class="input-group">
-                <div style="flex: 1;">
-                    <label>Mínim X:</label>
-                    <input type="number" id="minX" value="-5">
-                </div>
-                <div style="flex: 1;">
-                    <label>Màxim X:</label>
-                    <input type="number" id="maxX" value="5">
+                <input type="text" id="input-expr" value="x^2 - 4" placeholder="Ex: 2x + 3 o sin(x)">
+                <div style="display: flex; gap: 10px;">
+                    <div><label>Min X:</label><input type="number" id="min-x" value="-10"></div>
+                    <div><label>Max X:</label><input type="number" id="max-x" value="10"></div>
                 </div>
             </div>
 
-            <button onclick="executar()">Analitzar Funció</button>
+            <div id="panel-data" style="display:none;">
+                <label>Punts (format: Etiqueta, Valor):</label>
+                <textarea id="input-data" rows="8" placeholder="Dilluns, 5&#10;Dimarts, 8&#10;Dimecres, 4"></textarea>
+                <label>Tipus de gràfic:</label>
+                <select id="chart-type" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border);">
+                    <option value="line">Línies</option>
+                    <option value="bar">Barres</option>
+                </select>
+            </div>
 
-            <div id="resultats" class="analysis-box" style="display:none;">
-                <h4 style="margin-top: 0;">📋 Característiques (Fitxa 3)</h4>
-                <div class="analysis-grid">
-                    <div><strong>Domini:</strong> <span id="resDom">-</span></div>
-                    <div><strong>Imatge:</strong> <span id="resIm">-</span></div>
-                    <div><strong>Tall Eix Y:</strong> <span id="resY">-</span></div>
-                    <div><strong>Punts Tall X:</strong> <span id="resX">-</span></div>
-                </div>
-                <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
-                <p id="resTendencia" style="font-size: 0.9rem; margin: 0;"></p>
+            <button class="main-btn" onclick="processar()">Generar Gràfic</button>
+
+            <div id="box-results" class="results" style="display:none">
+                <strong>Anàlisi de dades:</strong>
+                <div id="out-analysis"></div>
             </div>
         </div>
     </aside>
 
     <main>
         <div class="card chart-container">
-            <canvas id="canvasChart"></canvas>
+            <canvas id="mainChart"></canvas>
         </div>
     </main>
 </div>
 
 <script>
-    let chartInstance = null;
+    let currentMode = 'func';
+    let myChart = null;
 
-    // Escolta la tecla Enter
-    document.getElementById('funcInput').addEventListener('keypress', e => {
-        if (e.key === 'Enter') executar();
-    });
+    function switchTab(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('panel-func').style.display = mode === 'func' ? 'block' : 'none';
+        document.getElementById('panel-data').style.display = mode === 'data' ? 'block' : 'none';
+    }
 
-    function executar() {
-        const expr = document.getElementById('funcInput').value;
-        const minX = parseFloat(document.getElementById('minX').value);
-        const maxX = parseFloat(document.getElementById('maxX').value);
+    function processar() {
+        if (currentMode === 'func') renderFunció();
+        else renderDades();
+    }
+
+    function renderFunció() {
+        const expr = document.getElementById('input-expr').value;
+        const minX = parseFloat(document.getElementById('min-x').value);
+        const maxX = parseFloat(document.getElementById('max-x').value);
         
-        try {
-            const node = math.parse(expr);
-            const f = node.compile();
-            
-            const labels = [];
-            const data = [];
-            const pointColors = [];
-            const pointRadius = [];
+        // Càlcul de rang lògic (pas dinàmic)
+        const range = maxX - minX;
+        const step = range / 100; // Sempre 100 punts per a suavitat total
 
-            // Generar dades
-            for (let x = minX; x <= maxX; x = math.round(x + 0.1, 10)) {
+        const labels = [], data = [], colors = [], radius = [];
+        try {
+            const f = math.compile(expr);
+            for (let x = minX; x <= maxX; x = math.round(x + step, 10)) {
                 let y = f.evaluate({x: x});
                 if (typeof y === 'number' && isFinite(y)) {
-                    labels.push(x);
+                    labels.push(x.toFixed(2));
                     data.push(y);
-                    
-                    // Identificar punts de tall (Fitxa 3)
-                    if (Math.abs(y) < 0.05 || Math.abs(x) < 0.01) {
-                        pointColors.push('#ef4444'); // Vermell per talls
-                        pointRadius.push(6);
+                    // Detectar talls amb eixos
+                    if (Math.abs(y) < Math.abs(step * 2) || Math.abs(x) < Math.abs(step * 2)) {
+                        colors.push('#dc2626'); radius.push(5);
                     } else {
-                        pointColors.push('#1e3a8a');
-                        pointRadius.push(0);
+                        colors.push('#2563eb'); radius.push(0);
                     }
                 }
             }
-
-            // Càlculs d'anàlisi
-            const tallY = f.evaluate({x: 0});
-            const imatgeMin = Math.min(...data);
-            const imatgeMax = Math.max(...data);
-            
-            // Mostrar resultats
-            document.getElementById('resultats').style.display = 'block';
-            document.getElementById('resDom').innerText = `[${minX}, ${maxX}]`;
-            document.getElementById('resIm').innerText = `[${imatgeMin.toFixed(1)}, ${imatgeMax.toFixed(1)}]`;
-            document.getElementById('resY').innerText = `(0, ${tallY.toFixed(1)})`;
-            
-            // Creixement (Fitxa 4)
-            const pendent = data[data.length-1] - data[0];
-            const tendencia = pendent > 0 ? "📈 Creixent" : (pendent < 0 ? "📉 Decreixent" : "➡️ Constant");
-            document.getElementById('resTendencia').innerHTML = `<strong>Tendència:</strong> En aquest interval la funció és ${tendencia}.`;
-
-            dibuixar(labels, data, pointColors, pointRadius);
-        } catch (err) {
-            alert("Error en l'expressió. Recorda usar 'x' com a variable.");
-        }
+            updateAnalysis(data, labels);
+            draw('line', labels, data, colors, radius);
+        } catch (e) { alert("Error en l'equació"); }
     }
 
-    function dibuixar(labels, data, pointColors, pointRadius) {
-        const ctx = document.getElementById('canvasChart').getContext('2d');
-        if (chartInstance) chartInstance.destroy();
+    function renderDades() {
+        const text = document.getElementById('input-data').value;
+        const type = document.getElementById('chart-type').value;
+        const lines = text.split('\n');
+        const labels = [], data = [];
 
-        chartInstance = new Chart(ctx, {
-            type: 'line',
+        lines.forEach(line => {
+            const parts = line.split(',');
+            if (parts.length === 2) {
+                labels.push(parts[0].trim());
+                data.push(parseFloat(parts[1].trim()));
+            }
+        });
+
+        updateAnalysis(data, labels);
+        draw(type, labels, data, '#2563eb', 4);
+    }
+
+    function updateAnalysis(data, labels) {
+        const box = document.getElementById('box-results');
+        const out = document.getElementById('out-analysis');
+        if (data.length === 0) return;
+        
+        const min = Math.min(...data);
+        const max = Math.max(...data);
+        box.style.display = 'block';
+        out.innerHTML = `
+            <p>🔼 Màxim: ${max.toFixed(2)}</p>
+            <p>🔽 Mínim: ${min.toFixed(2)}</p>
+            <p>📏 Rang Y: [${min.toFixed(2)}, ${max.toFixed(2)}]</p>
+        `;
+    }
+
+    function draw(type, labels, data, pColors, pRadius) {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        if (myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: type,
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'f(x)',
+                    label: 'Valors',
                     data: data,
-                    borderColor: '#1e3a8a',
-                    borderWidth: 3,
-                    pointBackgroundColor: pointColors,
-                    pointRadius: pointRadius,
-                    fill: false,
-                    tension: 0.2
+                    borderColor: '#2563eb',
+                    backgroundColor: type === 'bar' ? 'rgba(37, 99, 235, 0.5)' : 'transparent',
+                    borderWidth: 2,
+                    pointBackgroundColor: pColors,
+                    pointRadius: pRadius,
+                    tension: 0.3
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
                 scales: {
-                    x: { grid: { color: '#e2e8f0' }, title: { display: true, text: 'Eix X (Abscisses)' } },
-                    y: { grid: { color: '#e2e8f0' }, title: { display: true, text: 'Eix Y (Ordenades)' } }
+                    y: { beginAtZero: false, grid: { color: '#e2e8f0' } },
+                    x: { grid: { display: false } }
                 }
             }
         });
     }
 
-    window.onload = executar;
-
-    // Service Worker per PWA
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js');
-        });
-    }
+    window.onload = processar;
 </script>
 </body>
 </html>
