@@ -3,128 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MathEngine Pro V2</title>
+    <title>MathEngine - Estil Mates Para Eso</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <style>
-        :root { --p: #6366f1; --s: #1e293b; --bg: #f1f5f9; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
-        .app-container { display: grid; grid-template-columns: 380px 1fr; gap: 20px; flex: 1; min-height: 0; }
-        .card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: flex; flex-direction: column; overflow: hidden; }
-        .sidebar { padding: 20px; overflow-y: auto; }
-        .chart-area { padding: 10px; position: relative; }
+        :root { --p: #0070f3; --bg: #ffffff; --text: #000000; --grid: #eaeaea; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; }
         
-        h2 { color: var(--p); margin: 0 0 15px 0; font-size: 1.4rem; }
-        label { font-size: 0.8rem; font-weight: 700; color: #64748b; display: block; margin-top: 10px; }
-        select, input { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; margin-top: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; background: var(--p); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        header { padding: 20px; border-bottom: 1px solid var(--grid); display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-weight: 800; font-size: 1.2rem; color: var(--p); letter-spacing: -1px; }
+
+        .main-content { display: grid; grid-template-columns: 350px 1fr; flex: 1; overflow: hidden; }
+        @media (max-width: 900px) { .main-content { grid-template-columns: 1fr; overflow: auto; } }
+
+        .controls { padding: 25px; border-right: 1px solid var(--grid); overflow-y: auto; background: #fafafa; }
+        .chart-container { position: relative; padding: 20px; background: white; display: flex; flex-direction: column; }
         
-        .results { background: var(--s); color: white; padding: 15px; border-radius: 12px; margin-top: 15px; font-size: 0.85rem; }
-        .res-line { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid #334155; padding-bottom: 3px; }
-        .res-line b { color: #818cf8; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; font-size: 0.8rem; font-weight: 600; color: #666; margin-bottom: 8px; text-transform: uppercase; }
+        select, input { width: 100%; padding: 12px; border: 1px solid var(--grid); border-radius: 8px; font-size: 1rem; outline: none; transition: border 0.2s; }
+        select:focus, input:focus { border-color: var(--p); }
+
+        .btn { width: 100%; padding: 15px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem; }
+        
+        .analysis { margin-top: 30px; }
+        .analysis-card { background: white; border: 1px solid var(--grid); border-radius: 12px; padding: 15px; margin-bottom: 10px; }
+        .analysis-card h4 { margin: 0 0 10px 0; font-size: 0.8rem; color: var(--p); }
+        .analysis-card p { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
+
+        #canvas-wrapper { flex: 1; min-height: 400px; position: relative; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <aside class="card sidebar">
-        <h2>MathEngine Pro</h2>
-        
-        <label>Tipus d'exercici:</label>
-        <select id="type" onchange="toggleInputs()">
-            <option value="lineal">Lineal (Fitxa 1 i 2)</option>
-            <option value="quad">Quadràtica (Fitxa 3)</option>
-            <option value="manual">Escriure fórmula (y = ...)</option>
-        </select>
+<header>
+    <div class="logo">MATHENGINE // PRO</div>
+    <div style="font-size: 0.8rem; color: #666;">Inspirat en "Mates para eso"</div>
+</header>
 
-        <div id="dynamic-inputs">
-            </div>
-
-        <button onclick="update()">CALCULAR I DIBUIXAR</button>
-
-        <div id="results-box" class="results" style="display:none">
-            <div class="res-line"><span>Equació:</span> <b id="r-eq"></b></div>
-            <div class="res-line"><span>Domini:</span> <b id="r-dom"></b></div>
-            <div class="res-line"><span>Imatge:</span> <b id="r-im"></b></div>
-            <div class="res-line"><span>Tall Y:</span> <b id="r-ty"></b></div>
-            <div class="res-line"><span>Tall X:</span> <b id="r-tx"></b></div>
+<div class="main-content">
+    <div class="controls">
+        <div class="input-group">
+            <label>Tipus de Funció</label>
+            <select id="model" onchange="updateInputs()">
+                <option value="lineal">Lineal / Afí (y = mx + n)</option>
+                <option value="quad">Quadràtica (y = ax² + bx + c)</option>
+                <option value="manual">Expressió Lliure</option>
+            </select>
         </div>
-    </aside>
 
-    <main class="card chart-area">
-        <canvas id="canvas"></canvas>
-    </main>
+        <div id="dynamic-fields"></div>
+
+        <button class="btn" onclick="process()">GENERAR ANÀLISI</button>
+
+        <div class="analysis">
+            <div class="analysis-card">
+                <h4>Equació i Model</h4>
+                <p id="res-eq">-</p>
+            </div>
+            <div class="analysis-card">
+                <h4>Domini i Imatge</h4>
+                <p id="res-dom-im">-</p>
+            </div>
+            <div class="analysis-card">
+                <h4>Punts de Tall</h4>
+                <p id="res-talls">-</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div id="canvas-wrapper">
+            <canvas id="mainChart"></canvas>
+        </div>
+    </div>
 </div>
 
 <script>
-    let chart = null;
+    let myChart = null;
 
-    function toggleInputs() {
-        const t = document.getElementById('type').value;
-        const div = document.getElementById('dynamic-inputs');
-        if (t === 'lineal') {
-            div.innerHTML = `
-                <label>Baixada bandera / Fix (n):</label><input type="number" id="v1" value="2.05">
-                <label>Preu per unitat (m):</label><input type="number" id="v2" value="0.93">
+    function updateInputs() {
+        const m = document.getElementById('model').value;
+        const fields = document.getElementById('dynamic-fields');
+        if (m === 'lineal') {
+            fields.innerHTML = `
+                <div class="input-group"><label>Pendent (m)</label><input type="number" id="valM" value="0.93"></div>
+                <div class="input-group"><label>Valor Inicial (n)</label><input type="number" id="valN" value="2.05"></div>
             `;
-        } else if (t === 'quad') {
-            div.innerHTML = `
-                <label>Coeficient a (x²):</label><input type="number" id="v1" value="1">
-                <label>Coeficient b (x):</label><input type="number" id="v2" value="-4">
-                <label>Terme c (fix):</label><input type="number" id="v3" value="3">
+        } else if (m === 'quad') {
+            fields.innerHTML = `
+                <div class="input-group"><label>a (x²)</label><input type="number" id="valA" value="1"></div>
+                <div class="input-group"><label>b (x)</label><input type="number" id="valB" value="-4"></div>
+                <div class="input-group"><label>c (fix)</label><input type="number" id="valC" value="3"></div>
             `;
         } else {
-            div.innerHTML = `<label>Escriu la funció:</label><input type="text" id="v1" value="x^2 - 4">`;
+            fields.innerHTML = `<div class="input-group"><label>Funció f(x)</label><input type="text" id="valFree" value="x^2 - 4"></div>`;
         }
     }
 
-    function update() {
-        const t = document.getElementById('type').value;
+    function process() {
+        const model = document.getElementById('model').value;
         let expr = "";
-        if(t === 'lineal') expr = `${document.getElementById('v2').value}*x + ${document.getElementById('v1').value}`;
-        else if(t === 'quad') expr = `${document.getElementById('v1').value}*x^2 + ${document.getElementById('v2').value}*x + ${document.getElementById('v3').value}`;
-        else expr = document.getElementById('v1').value;
+        
+        if (model === 'lineal') expr = `${document.getElementById('valM').value}*x + ${document.getElementById('valN').value}`;
+        else if (model === 'quad') expr = `${document.getElementById('valA').value}*x^2 + ${document.getElementById('valB').value}*x + ${document.getElementById('valC').value}`;
+        else expr = document.getElementById('valFree').value;
 
         const node = math.parse(expr);
         const f = node.compile();
         
         const labels = [], data = [], colors = [], radius = [];
-        // Límits del gràfic (Això soluciona el problema del Zoom)
-        const range = 10; 
-        
-        for (let x = -range; x <= range; x += 0.5) {
+        const limit = 10; // Escala fixa per evitar el "zoom" excessiu
+
+        for (let x = -limit; x <= limit; x += 0.2) {
             let y = f.evaluate({x: x});
-            labels.push(x);
+            labels.push(x.toFixed(1));
             data.push(y);
-            // Marcar punts de tall
-            if (Math.abs(y) < 0.3 || Math.abs(x) < 0.1) {
-                colors.push('#f43f5e'); radius.push(6);
+            
+            // Detectar punts de tall per pintar-los (Fitxa 3)
+            if (Math.abs(y) < 0.2 || Math.abs(x) < 0.1) {
+                colors.push('#0070f3'); radius.push(5);
             } else {
-                colors.push('#6366f1'); radius.push(0);
+                colors.push('rgba(0,0,0,0)'); radius.push(0);
             }
         }
 
-        // Mostrar dades d'anàlisi
-        document.getElementById('results-box').style.display = 'block';
-        document.getElementById('r-eq').innerText = "y = " + node.toString();
-        document.getElementById('r-dom').innerText = "R (Tots els reals)";
-        const yFiltered = data.filter(v => isFinite(v));
-        document.getElementById('r-im').innerText = `[${Math.min(...yFiltered).toFixed(1)}, ${Math.max(...yFiltered).toFixed(1)}]`;
-        document.getElementById('r-ty').innerText = `(0, ${f.evaluate({x:0}).toFixed(2)})`;
-        
-        draw(labels, data, colors, radius, range);
+        // Textos d'anàlisi
+        document.getElementById('res-eq').innerText = "y = " + node.toString();
+        document.getElementById('res-dom-im').innerHTML = `Dom: ℝ <br> Img: [${Math.min(...data.filter(v=>isFinite(v))).toFixed(1)}, ${Math.max(...data.filter(v=>isFinite(v))).toFixed(1)}]`;
+        const tallY = f.evaluate({x:0});
+        document.getElementById('res-talls').innerText = `Eix Y: (0, ${tallY.toFixed(2)})`;
+
+        renderChart(labels, data, colors, radius, limit);
     }
 
-    function draw(l, d, c, r, range) {
-        const ctx = document.getElementById('canvas').getContext('2d');
-        if (chart) chart.destroy();
-        chart = new Chart(ctx, {
+    function renderChart(l, d, c, r, limit) {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        if (myChart) myChart.destroy();
+        
+        myChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: l,
                 datasets: [{
-                    data: d, borderColor: '#6366f1', borderWidth: 3,
-                    pointBackgroundColor: c, pointRadius: r, tension: 0.2, fill: false
+                    data: d,
+                    borderColor: '#0070f3',
+                    borderWidth: 2,
+                    pointBackgroundColor: c,
+                    pointRadius: r,
+                    tension: 0.2,
+                    fill: false
                 }]
             },
             options: {
@@ -133,15 +161,15 @@
                 scales: {
                     x: {
                         type: 'linear', position: 'center',
-                        min: -range, max: range,
-                        grid: { color: '#e2e8f0' },
-                        ticks: { stepSize: 1 }
+                        min: -limit, max: limit,
+                        grid: { color: '#eee' },
+                        ticks: { stepSize: 1, font: { size: 10 } }
                     },
                     y: {
                         type: 'linear', position: 'center',
-                        min: -range, max: range, // Aquí fixem el zoom
-                        grid: { color: '#e2e8f0' },
-                        ticks: { stepSize: 1 }
+                        min: -limit, max: limit,
+                        grid: { color: '#eee' },
+                        ticks: { stepSize: 1, font: { size: 10 } }
                     }
                 },
                 plugins: { legend: { display: false } }
@@ -149,7 +177,7 @@
         });
     }
 
-    window.onload = () => { toggleInputs(); update(); };
+    window.onload = () => { updateInputs(); process(); };
 </script>
 </body>
 </html>
