@@ -1,38 +1,16 @@
-const CACHE_NAME = 'mathengine-v2';
-const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  'https://cdn.jsdelivr.net/npm/chart.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js'
-];
-
-// Instalación: Guardamos los archivos en la caché local
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('Cacheando archivos de MathEngine...');
-      return cache.addAll(ASSETS);
-    })
-  );
-});
-
-// Activación: Limpiamos cachés antiguas si las hubiera
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-      );
-    })
-  );
-});
-
-// Interceptamos peticiones: Si está en caché, lo servimos desde ahí
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
-  );
-});
+{
+  "name": "MathEngine Pro",
+  "short_name": "MathEngine",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0070f3",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2344/2344132.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
