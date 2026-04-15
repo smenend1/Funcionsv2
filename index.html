@@ -3,29 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MathEngine Solver</title>
+    <title>MathEngine Pro</title>
     <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0070f3">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <style>
-        :root { --p: #0070f3; --bg: #f5f5f7; --card: #ffffff; --txt: #1d1d1f; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--txt); margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        header { background: #fff; padding: 15px 20px; border-bottom: 1px solid #d2d2d7; font-weight: 700; color: var(--p); }
-        .layout { display: grid; grid-template-columns: 400px 1fr; flex: 1; overflow: hidden; }
+        :root { --p: #0070f3; --bg: #f5f5f7; --card: #ffffff; --txt: #1d1d1f; --red: #f43f5e; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--txt); margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        header { background: #fff; padding: 15px 20px; border-bottom: 1px solid #d2d2d7; font-weight: 700; color: var(--p); letter-spacing: 1px; }
+        .layout { display: grid; grid-template-columns: 380px 1fr; flex: 1; overflow: hidden; }
         @media (max-width: 900px) { .layout { grid-template-columns: 1fr; overflow: auto; } }
         
-        .sidebar { padding: 20px; overflow-y: auto; background: #fff; border-right: 1px solid #d2d2d7; }
-        .chart-area { position: relative; padding: 20px; display: flex; flex-direction: column; }
+        .sidebar { padding: 20px; overflow-y: auto; background: #fff; border-right: 1px solid #d2d2d7; z-index: 10; }
+        .chart-area { position: relative; padding: 20px; background: #fafafa; display: flex; flex-direction: column; }
         
-        .card { background: var(--bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #d2d2d7; }
-        h3 { font-size: 0.75rem; text-transform: uppercase; color: #86868b; margin-top: 0; }
+        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e5e5e7; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        h3 { font-size: 0.7rem; text-transform: uppercase; color: #86868b; margin: 0 0 10px 0; }
         
-        select, input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #d2d2d7; margin-top: 8px; box-sizing: border-box; font-size: 1rem; }
-        .btn { width: 100%; padding: 15px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        label { font-size: 0.8rem; font-weight: 600; display: block; margin-top: 10px; }
+        select, input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #d2d2d7; margin-top: 5px; box-sizing: border-box; font-size: 1rem; outline-color: var(--p); }
+        .btn { width: 100%; padding: 15px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 20px; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.9; }
         
-        .step { border-left: 2px solid var(--p); padding-left: 10px; margin-bottom: 10px; font-size: 0.85rem; }
-        .math-font { font-family: 'JetBrains Mono', monospace; font-weight: bold; color: var(--p); }
-        #canvas-wrap { flex: 1; background: white; border-radius: 12px; border: 1px solid #d2d2d7; position: relative; }
+        .step { border-left: 3px solid var(--p); padding-left: 12px; margin-bottom: 12px; font-size: 0.9rem; line-height: 1.4; }
+        .math-font { font-family: 'Courier New', monospace; font-size: 1.2rem; font-weight: bold; color: var(--p); }
+        #canvas-wrap { flex: 1; background: white; border-radius: 12px; border: 1px solid #d2d2d7; position: relative; min-height: 400px; }
     </style>
 </head>
 <body>
@@ -34,25 +37,24 @@
 
 <div class="layout">
     <div class="sidebar">
-        <div class="input-group">
-            <h3>Tipus d'equació</h3>
+        <div class="card">
+            <h3>Configuració</h3>
             <select id="type" onchange="initUI()">
-                <option value="lin">Lineal (y = mx + n)</option>
-                <option value="quad">Quadràtica (y = ax² + bx + c)</option>
+                <option value="lin">Funció Lineal (y = mx + n)</option>
+                <option value="quad">Funció Quadràtica (y = ax² + bx + c)</option>
             </select>
+            <div id="fields"></div>
+            <button class="btn" onclick="solve()">RESOLDRE ARA</button>
         </div>
 
-        <div id="fields"></div>
-        <button class="btn" onclick="solve()">RESOLDRE PAS A PAS</button>
-
-        <div id="solution-panel" style="display:none; margin-top: 20px;">
+        <div id="solution-panel" style="display:none;">
             <div class="card">
-                <h3>Resultats Finals</h3>
+                <h3>Equació i Punts de Tall</h3>
                 <p id="res-eq" class="math-font"></p>
-                <p id="res-points"></p>
+                <p id="res-points" style="font-size: 0.9rem;"></p>
             </div>
             <div class="card">
-                <h3>Procediment</h3>
+                <h3>Procediment Pas a Pas</h3>
                 <div id="steps"></div>
             </div>
         </div>
@@ -72,9 +74,14 @@
         const t = document.getElementById('type').value;
         const f = document.getElementById('fields');
         if(t === 'lin') {
-            f.innerHTML = `<label>m</label><input type="number" id="vM" value="2"><label>n</label><input type="number" id="vN" value="-6">`;
+            f.innerHTML = `
+                <label>Pendent (m)</label><input type="number" id="vM" value="2">
+                <label>Terme independent (n)</label><input type="number" id="vN" value="-6">`;
         } else {
-            f.innerHTML = `<label>a</label><input type="number" id="vA" value="1"><label>b</label><input type="number" id="vB" value="-2"><label>c</label><input type="number" id="vC" value="-3">`;
+            f.innerHTML = `
+                <label>Coeficient a</label><input type="number" id="vA" value="1">
+                <label>Coeficient b</label><input type="number" id="vB" value="-2">
+                <label>Coeficient c</label><input type="number" id="vC" value="-3">`;
         }
     }
 
@@ -82,72 +89,90 @@
         const t = document.getElementById('type').value;
         let steps = "";
         let tallsX = [];
+        let pointsToMark = [];
         let expr = "";
 
         if(t === 'lin') {
-            const m = parseFloat(document.getElementById('vM').value);
-            const n = parseFloat(document.getElementById('vN').value);
+            const m = parseFloat(document.getElementById('vM').value) || 0;
+            const n = parseFloat(document.getElementById('vN').value) || 0;
             expr = `${m}*x + ${n}`;
-            steps += `<div class="step"><b>1. Tall Y:</b> Substituïm x=0 → y = ${m}(0) + (${n}) = <b>${n}</b>.</div>`;
+            steps += `<div class="step"><b>1. Tall Y (x=0):</b><br>y = ${m}(0) + (${n}) = <b>${n}</b>.</div>`;
+            pointsToMark.push({x: 0, y: n});
             if(m !== 0) {
                 const x0 = -n/m;
                 tallsX.push(x0);
-                steps += `<div class="step"><b>2. Tall X:</b> Igualem a zero → ${m}x + ${n} = 0 → x = ${-n}/${m} = <b>${x0.toFixed(2)}</b>.</div>`;
+                steps += `<div class="step"><b>2. Tall X (y=0):</b><br>x = <b>${x0.toFixed(2)}</b>.</div>`;
+                pointsToMark.push({x: x0, y: 0});
             }
         } else {
-            const a = parseFloat(document.getElementById('vA').value);
-            const b = parseFloat(document.getElementById('vB').value);
-            const c = parseFloat(document.getElementById('vC').value);
+            const a = parseFloat(document.getElementById('vA').value) || 0;
+            const b = parseFloat(document.getElementById('vB').value) || 0;
+            const c = parseFloat(document.getElementById('vC').value) || 0;
+            if (a === 0) return;
             expr = `${a}*x^2 + ${b}*x + ${c}`;
-            steps += `<div class="step"><b>1. Tall Y:</b> Substituïm x=0 → y = <b>${c}</b>.</div>`;
-            const disc = b*b - 4*a*c;
-            steps += `<div class="step"><b>2. Discriminant:</b> Δ = ${b}² - 4·${a}·${c} = <b>${disc}</b>.</div>`;
+            steps += `<div class="step"><b>1. Tall Y (x=0):</b><br>y = <b>${c}</b>.</div>`;
+            pointsToMark.push({x: 0, y: c});
+            const disc = (b*b) - (4*a*c);
+            steps += `<div class="step"><b>2. Discriminant:</b> Δ = <b>${disc}</b>.</div>`;
             if(disc >= 0) {
                 const x1 = (-b + Math.sqrt(disc))/(2*a);
                 const x2 = (-b - Math.sqrt(disc))/(2*a);
                 tallsX.push(x1, x2);
-                steps += `<div class="step"><b>3. Tall X:</b> Usem la fórmula general. Arrels: <b>${x1.toFixed(2)}</b> i <b>${x2.toFixed(2)}</b>.</div>`;
-            } else {
-                steps += `<div class="step"><b>3. Tall X:</b> Δ negatiu, no hi ha talls amb l'eix X.</div>`;
+                pointsToMark.push({x: x1, y: 0}, {x: x2, y: 0});
+                steps += `<div class="step"><b>3. Talls X:</b> x₁=<b>${x1.toFixed(2)}</b>, x₂=<b>${x2.toFixed(2)}</b></div>`;
             }
+            const vx = -b / (2*a);
+            const vy = a*(vx**2) + b*vx + c;
+            pointsToMark.push({x: vx, y: vy});
+            steps += `<div class="step"><b>4. Vèrtex:</b> V = <b>(${vx.toFixed(2)}, ${vy.toFixed(2)})</b></div>`;
         }
 
         document.getElementById('solution-panel').style.display = 'block';
-        document.getElementById('res-eq').innerText = "y = " + expr;
+        document.getElementById('res-eq').innerText = "y = " + expr.replace(/\*/g, '');
         document.getElementById('steps').innerHTML = steps;
-        document.getElementById('res-points').innerHTML = `Talls X: ${tallsX.map(x => `(${x.toFixed(1)}, 0)`).join(', ')}`;
-
-        render(expr, tallsX);
+        document.getElementById('res-points').innerHTML = `<b>Talls X:</b> ${tallsX.map(x => x.toFixed(2)).join(', ') || 'Cap'}`;
+        render(expr, pointsToMark);
     }
 
-    function render(expr, talls) {
+    function render(expr, points) {
         const f = math.compile(expr);
-        const labels = [], data = [], colors = [], radius = [];
-        for(let x=-10; x<=10; x+=0.5) {
-            let y = f.evaluate({x:x});
-            labels.push(x); data.push(y);
-            let isTall = talls.some(tx => Math.abs(tx-x) < 0.4) || Math.abs(x) < 0.1;
-            colors.push(isTall ? '#f43f5e' : 'transparent');
-            radius.push(isTall ? 5 : 0);
+        const curveData = [];
+        for(let x=-10.1; x<=10.1; x+=0.2) {
+            curveData.push({ x: x, y: f.evaluate({x: x}) });
         }
 
         const ctx = document.getElementById('chart').getContext('2d');
         if(myChart) myChart.destroy();
         myChart = new Chart(ctx, {
             type: 'line',
-            data: { labels, datasets: [{ data, borderColor: '#0070f3', borderWidth: 3, pointBackgroundColor: colors, pointRadius: radius, tension: 0.3 }] },
-            options: { 
+            data: {
+                datasets: [
+                    { data: curveData, borderColor: '#0070f3', borderWidth: 3, pointRadius: 0, tension: 0.4 },
+                    { data: points, backgroundColor: '#f43f5e', pointRadius: 6, showLine: false }
+                ]
+            },
+            options: {
                 responsive: true, maintainAspectRatio: false,
-                scales: { 
-                    x: { type: 'linear', position: 'center', min: -10, max: 10 }, 
-                    y: { type: 'linear', position: 'center', min: -10, max: 10 } 
+                scales: {
+                    x: { type: 'linear', position: 'center', min: -10, max: 10 },
+                    y: { type: 'linear', position: 'center', min: -10, max: 10 }
                 },
                 plugins: { legend: { display: false } }
             }
         });
     }
 
-    window.onload = () => { initUI(); solve(); };
+    // Inicialització y Registre del Service Worker
+    window.onload = () => { 
+        initUI(); 
+        solve(); 
+        
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker registrat amb èxit', reg))
+                .catch(err => console.error('Error al registrar el Service Worker', err));
+        }
+    };
 </script>
 </body>
 </html>
